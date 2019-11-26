@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FastDev.ValidateCode</name>
+    </assembly>
+    <members>
+        <member name="T:FastDev.ValidateCode">
+            <summary>
+            生成验证码的类
+            </summary>
+        </member>
+        <member name="F:FastDev.ValidateCode.MaxLength">
+            <summary>
+            验证码的最大长度
+            </summary>
+        </member>
+        <member name="F:FastDev.ValidateCode.MinLength">
+            <summary>
+            验证码的最小长度
+            </summary>
+        </member>
+        <member name="F:FastDev.ValidateCode.length">
+            <summary>
+            验证码长度
+            </summary>
+        </member>
+        <member name="M:FastDev.ValidateCode.#ctor(System.Int32)">
+            <summary>
+            构造函数
+            </summary>
+            <param name="length">验证码长度</param>
+        </member>
+        <member name="M:FastDev.ValidateCode.CreateValidateCode">
+            <summary>
+            生成验证码
+            </summary>
+            <returns>验证码</returns>
+        </member>
+        <member name="M:FastDev.ValidateCode.CreateValidateGraphic(System.String)">
+            <summary>
+            创建验证码的图片
+            </summary>
+            <param name="validateCode">验证码</param>
+            <returns>数组</returns>
+        </member>
+        <member name="P:FastDev.ValidateCode.ImageWidth">
+            <summary>
+            设置或获取验证码图片的长度
+            //return (int)(validateNumLength * 12.0);
+            </summary>
+        </member>
+        <member name="P:FastDev.ValidateCode.ImageHeight">
+            <summary>
+            设置或获取验证码的高度
+             return 22.5;
+            </summary>
+        </member>
+        <member name="T:FastDev.VerificationCode">
+            <summary>
+            Class VerificationCode.
+            </summary>
+        </member>
+        <member name="M:FastDev.VerificationCode.GetVCode(System.String)">
+            <summary>
+            Gets the v code.
+            </summary>
+            <param name="codeStr">The code string.</param>
+            <returns>System.Byte[].</returns>
+        </member>
+        <member name="M:FastDev.VerificationCode.Paint_Text(System.Drawing.Graphics,System.String)">
+            <summary>
+            绘画文字
+            </summary>
+            <param name="g">The g.</param>
+            <param name="code">The code.</param>
+        </member>
+        <member name="M:FastDev.VerificationCode.Paint_TextStain(System.Drawing.Bitmap)">
+            <summary>
+            绘画文字噪音点
+            </summary>
+            <param name="g"></param>
+        </member>
+        <member name="M:FastDev.VerificationCode.GetFont">
+            <summary>
+            随机取一个字体
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FastDev.VerificationCode.GetBrush">
+            <summary>
+            随机取一个笔刷
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FastDev.VerificationCode.Paint_Background(System.Drawing.Graphics)">
+            <summary>
+            绘画背景颜色
+            </summary>
+            <param name="g"></param>
+        </member>
+        <member name="M:FastDev.VerificationCode.GetFontStyle(System.Int32)">
+            <summary>
+            取一个字体的样式
+            </summary>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="M:FastDev.VerificationCode.GetRandomCode">
+            <summary>
+            取得一个 4 位的随机码
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,83 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using CJJ.Blog.Apiv2.App_Filters;
+using System.Web.Http;
+using CJJ.Blog.Apiv2.Models;
+using CJJ.Blog.Apiv2.Helpers;
+using Newtonsoft.Json;
+using System.Web;
+
+namespace CJJ.Blog.Apiv2.Controllers
+{
+    [WithOutPermisstion]
+    public class BaseController : ApiController
+    {
+        /// <summary>
+        /// 加密的返回，前端根据code来判断是否处理数据
+        /// </summary>
+        /// <param name="data">原始数据</param>
+        /// <param name="token">登录token</param>
+        /// <param name="code"></param>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public JsonResponse FastResponse(object data, string token, int code = 0, string msg = "")
+        {
+            var bdata = JsonConvert.SerializeObject(data);
+            if (ConfigHelper.GetConfToBool("IsDebug"))
+            {
+                return new JsonResponse
+                {
+                    Code = code,
+                    Data = bdata,
+                    Msg = msg
+                };
+            }
+            else
+            {
+                var encrydata = TokenHelper.TokenEncry(bdata, token);
+                return new JsonResponse
+                {
+                    Code = code,
+                    Data = encrydata,
+                    Msg = msg
+                };
+            }
+
+        }
+
+        /// <summary>
+        /// 获取客户端IP地址
+        /// </summary>
+        /// <returns>System.String.</returns>
+        public static string GetIP()
+        {
+            try
+            {
+                string result = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+                if (string.IsNullOrEmpty(result))
+                {
+                    result = HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
+                }
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    result = HttpContext.Current.Request.UserHostAddress;
+                }
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    return "0.0.0.0";
+                }
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return "0.0.0.0";
+            }
+        }
+    }
+}

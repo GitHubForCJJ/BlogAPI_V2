@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CJJ.Blog.Apiv2", "CJJ.Blog.Apiv2\CJJ.Blog.Apiv2.csproj", "{FBEBFD2A-3E52-4FD4-A452-DB4564268992}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blog.Com", "Blog.Com\Blog.Com.csproj", "{8AEDF8E5-15C4-42B9-A266-5B6B7BEA7DF5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBEBFD2A-3E52-4FD4-A452-DB4564268992}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBEBFD2A-3E52-4FD4-A452-DB4564268992}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBEBFD2A-3E52-4FD4-A452-DB4564268992}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBEBFD2A-3E52-4FD4-A452-DB4564268992}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AEDF8E5-15C4-42B9-A266-5B6B7BEA7DF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AEDF8E5-15C4-42B9-A266-5B6B7BEA7DF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AEDF8E5-15C4-42B9-A266-5B6B7BEA7DF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AEDF8E5-15C4-42B9-A266-5B6B7BEA7DF5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CE04E241-91DC-4AF2-879C-78EADDCAE038}
+	EndGlobalSection
+EndGlobal
