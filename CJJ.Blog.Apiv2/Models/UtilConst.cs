@@ -1,4 +1,7 @@
 ﻿using CJJ.Blog.Apiv2.Helpers;
+using CJJ.Blog.NetWork.WcfHelper;
+using CJJ.Blog.Service.Models.View;
+using FastDev.Common.Code;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +49,33 @@ namespace CJJ.Blog.Apiv2.Models
             {
                 return "0.0.0.0";
             }
+        }
+
+        public static OpertionUser GetLoginOpt(string token)
+        {
+            var opt = new OpertionUser();
+            try
+            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new OpertionUser();
+                }
+                var type = token.Substring(31, 1).Toint();
+                if (type == 1)
+                {
+                    var sysuser = BlogHelper.GetSysLoginUserByToken(token);
+                    opt.UserId = sysuser.Model.KID.ToString();
+                    opt.UserName = sysuser.Model.UserName;
+                    opt.UserClientIp = GetIP();
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return opt;
         }
     }
 }

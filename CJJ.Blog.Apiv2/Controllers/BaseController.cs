@@ -9,6 +9,7 @@ using CJJ.Blog.Apiv2.Models;
 using CJJ.Blog.Apiv2.Helpers;
 using Newtonsoft.Json;
 using System.Web;
+using CJJ.Blog.Service.Models.View;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -78,6 +79,51 @@ namespace CJJ.Blog.Apiv2.Controllers
             {
                 return "0.0.0.0";
             }
+        }
+
+        /// <summary>
+        /// Adds the base information.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dic">The dic.</param>
+        /// <param name="token">The token.</param>
+        /// <param name="isAdd">if set to <c>true</c> [is add].</param>
+        /// <param name="opt">The opt.</param>
+        /// <returns></returns>
+        public static Dictionary<string, object> AddBaseInfo<T>(Dictionary<string, object> dic, string token, bool isAdd, ref OpertionUser opt)
+        {
+            var user = UtilConst.GetLoginOpt(token);
+
+            var propertys = typeof(T).GetProperties();
+            if (propertys.Count(x => x.Name == "CreateTime") > 0 && isAdd)
+            {
+                dic.Add("CreateTime", DateTime.Now); ;
+            }
+            if (propertys.Count(x => x.Name == "CreateUserId") > 0 && isAdd)
+            {
+                dic.Add("CreateUserId", user.UserId);
+            }
+            if (propertys.Count(x => x.Name == "CreateUserName") > 0 && isAdd)
+            {
+                dic.Add("CreateUserName", user.UserName);
+            }
+            if (propertys.Count(x => x.Name == "UpdateUserId") > 0)
+            {
+                dic.Add("UpdateUserId", user.UserId);
+            }
+            if (propertys.Count(x => x.Name == "UpdateUserName") > 0)
+            {
+                dic.Add("UpdateUserName", user.UserName);
+            }
+            if (propertys.Count(x => x.Name == "UpdateTime") > 0)
+            {
+                dic.Add("UpdateTime", DateTime.Now);
+            }
+            opt.UserId = user.UserId;
+            opt.UserName = user.UserName;
+            opt.UserClientIp = GetIP();
+
+            return dic;
         }
     }
 }
