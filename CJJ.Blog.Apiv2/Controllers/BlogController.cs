@@ -32,7 +32,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                     dicwhere.Add(nameof(Bloginfo.Type), model.KID);
                 }
                 var retlist = BlogHelper.GetJsonListPage_Bloginfo(model.Page, model.Limit, "CreateTime desc", dicwhere);
-                return new JsonResponse { Code = retlist.code.Toint(), Data = retlist.code.Toint() == 0 ? retlist.data : null };
+                return new JsonResponse { Code = retlist.code.Toint(), Count = retlist.code.Toint() == 0 ? retlist.data.Count() : 0, Data = retlist.code.Toint() == 0 ? retlist.data : null };
 
             }
             catch (Exception ex)
@@ -43,7 +43,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         }
 
         /// <summary>
-        /// 查询单个文章
+        /// 查询单个文章  传博客编号
         /// </summary>
         /// <returns></returns>
         [HttpPost]
@@ -51,11 +51,11 @@ namespace CJJ.Blog.Apiv2.Controllers
         {
             try
             {
-                if (model.KID < 0)
+                if (string.IsNullOrEmpty(model.Num))
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
-                var retlist = BlogHelper.GetModelByKID_Bloginfo(model.KID);
+                var retlist = BlogHelper.GetModelByNum(model.Num);
 
                 return new JsonResponse { Code = retlist != null ? 0 : 1, Data = retlist != null ? retlist : null };
             }
