@@ -1,4 +1,5 @@
-﻿using CJJ.Blog.NetWork.WcfHelper;
+﻿using CJJ.Blog.Apiv2.ViewModels;
+using CJJ.Blog.NetWork.WcfHelper;
 using CJJ.Blog.Service.Model.View;
 using CJJ.Blog.Service.Models.Data;
 using FastDev.Common.Code;
@@ -62,6 +63,62 @@ namespace CJJ.Blog.Apiv2.Controllers
             catch (Exception ex)
             {
                 LogHelper.WriteLog(ex, "BlogController/GetListBlog");
+                return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
+            }
+        }
+        /// <summary>
+        /// 根据文章编号  文章类别查询上下篇
+        /// </summary>
+        /// <param name="model">{"blogNum":"ajksdj","BlogType":1}</param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResponse GetPrenextBlog([FromBody]PrenextModel model)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(model.BlogNum))
+                {
+                    return new JsonResponse { Code = 1, Msg = "参数不合法" };
+                }
+                var dic = new Dictionary<string, object>
+                {
+                    {nameof(Bloginfo.IsDeleted),0 },
+                    {nameof(Bloginfo.BlogNum),model.BlogNum }
+                };
+                var retlist = BlogHelper.GetPrenextBlog(model.BlogNum, model.BlogType);
+
+                return new JsonResponse { Code = retlist.IsSucceed ? 0 : 1, Data = retlist };
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "BlogController/GetPrenext");
+                return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
+            }
+        }
+
+        /// <summary>
+        /// 根据文章编号  文章类别查询上下篇
+        /// </summary>
+        /// <param name="model">{}</param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResponse GetListBlogTypes([FromBody]PrenextModel model)
+        {
+            try
+            {
+                var dic = new Dictionary<string, object>
+                {
+                    {nameof(Category.IsDeleted),0 },
+                    {nameof(Category.States),0 }
+                };
+                var retlist = BlogHelper.GetList_Category(dic);
+                retlist = retlist?.OrderByDescending(x => x.CreateTime)?.ToList();
+
+                return new JsonResponse { Code = retlist != null ? 0 : 1, Data = retlist };
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "BlogController/GetListBlogTypes");
                 return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
             }
         }
