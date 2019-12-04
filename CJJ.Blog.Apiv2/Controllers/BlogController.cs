@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace CJJ.Blog.Apiv2.Controllers
@@ -57,6 +58,24 @@ namespace CJJ.Blog.Apiv2.Controllers
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
                 var retlist = BlogHelper.GetModelByNum(model.Num);
+
+                #region 访问次数
+
+                Task.Run(() =>
+                {
+                    var dic = new Dictionary<string, object>()
+                    {
+                        {nameof(Bloginfo.BlogNum),model.Num },
+                        {nameof(Bloginfo.IsDeleted),0 }
+                    };
+                    var updic = new Dictionary<string, object>()
+                    {
+                        {nameof(Bloginfo.BlogNum),retlist.Views+1 },
+                    };
+                    BlogHelper.UpdateByWhere_Bloginfo(updic, dic, new Service.Models.View.OpertionUser());
+                });
+
+                #endregion
 
                 return new JsonResponse { Code = retlist != null ? 0 : 1, Data = retlist != null ? retlist : null };
             }
