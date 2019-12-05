@@ -1,7 +1,10 @@
-﻿using CJJ.Blog.Apiv2.ViewModels;
+﻿using CJJ.Blog.Apiv2.Models;
+using CJJ.Blog.Apiv2.ViewModels;
 using CJJ.Blog.NetWork.WcfHelper;
+using CJJ.Blog.Service.Model.Data;
 using CJJ.Blog.Service.Model.View;
 using CJJ.Blog.Service.Models.Data;
+using CJJ.Blog.Service.Models.View;
 using FastDev.Common.Code;
 using FastDev.Log;
 using System;
@@ -138,6 +141,40 @@ namespace CJJ.Blog.Apiv2.Controllers
             catch (Exception ex)
             {
                 LogHelper.WriteLog(ex, "BlogController/GetListBlogTypes");
+                return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
+            }
+        }
+        /// <summary>
+        /// 文章点赞
+        /// </summary>
+        /// <param name="model">{}</param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResponse AddPraise([FromBody]CommentView model)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(model.Token) || string.IsNullOrEmpty(model.BlogNum))
+                {
+                    return new JsonResponse { Code = 1, Msg = "参数不合法" };
+                }
+                var mem = UtilConst.GetLoginOpt(model.Token);
+
+                var dic = new Dictionary<string, object>
+                {
+                    {nameof(ArticlePraise.MemberId),mem.UserId },
+                    {nameof(ArticlePraise.BlogNum),model.BlogNum }
+                };
+                var opt = new OpertionUser();
+                dic = UtilConst.AddBaseInfo<ArticlePraise>(dic, model.Token, true,ref opt);
+
+                var ret = BlogHelper.Add_ArticlePraise(dic,opt);
+
+                return new JsonResponse { Code = ret.IsSucceed?0:1,Data=ret };
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "BlogController/AddPraise");
                 return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
             }
         }

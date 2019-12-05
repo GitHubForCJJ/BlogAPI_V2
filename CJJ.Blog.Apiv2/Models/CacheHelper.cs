@@ -21,7 +21,7 @@ namespace CJJ.Blog.Apiv2.Models
             {
                 var cache = HttpContext.Current.Cache.Get(cachekey);
                 HttpContext.Current.Cache.Remove(cachekey);
-                return HttpContext.Current.Cache.Get(cachekey);
+                return cache;
             }
             catch (Exception ex)
             {

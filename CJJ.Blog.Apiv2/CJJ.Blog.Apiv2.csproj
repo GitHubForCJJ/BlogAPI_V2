@@ -132,6 +132,7 @@
     <Compile Include="Models\JsonRequest.cs" />
     <Compile Include="Models\JsonResponse.cs" />
     <Compile Include="Models\LoginModel.cs" />
+    <Compile Include="ViewModels\GetQrcodeView.cs" />
     <Compile Include="ViewModels\RegistModel.cs" />
     <Compile Include="Models\UtilConst.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

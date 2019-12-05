@@ -53,21 +53,27 @@ namespace CJJ.Blog.Apiv2.Models
 
         public static OpertionUser GetLoginOpt(string token)
         {
-            var opt = new OpertionUser();
+            OpertionUser opt = null;
             try
             {
+                opt = new OpertionUser();
                 if (string.IsNullOrEmpty(token))
                 {
-                    return new OpertionUser();
+                    return opt;
                 }
                 var type = token.Substring(31, 1).Toint();
+                var sysuser = BlogHelper.GetSysLoginUserByToken(token);
                 if (type == 1)
                 {
-                    var sysuser = BlogHelper.GetSysLoginUserByToken(token);
                     opt.UserId = sysuser.Model.KID.ToString();
                     opt.UserName = sysuser.Model.UserName;
                     opt.UserClientIp = GetIP();
-
+                }
+                else if (type == 2)
+                {
+                    opt.UserId = sysuser.MemberModel.KID.ToString();
+                    opt.UserName = sysuser.MemberModel.UserName;
+                    opt.UserClientIp = GetIP();
                 }
 
             }
@@ -76,6 +82,51 @@ namespace CJJ.Blog.Apiv2.Models
 
             }
             return opt;
+        }
+
+        /// <summary>
+        /// Adds the base information.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dic">The dic.</param>
+        /// <param name="token">The token.</param>
+        /// <param name="isAdd">if set to <c>true</c> [is add].</param>
+        /// <param name="opt">The opt.</param>
+        /// <returns></returns>
+        public static Dictionary<string, object> AddBaseInfo<T>(Dictionary<string, object> dic, string token, bool isAdd, ref OpertionUser opt)
+        {
+            var user = UtilConst.GetLoginOpt(token);
+
+            var propertys = typeof(T).GetProperties();
+            if (propertys.Count(x => x.Name == "CreateTime") > 0 && isAdd)
+            {
+                dic.Add("CreateTime", DateTime.Now); ;
+            }
+            if (propertys.Count(x => x.Name == "CreateUserId") > 0 && isAdd)
+            {
+                dic.Add("CreateUserId", user.UserId);
+            }
+            if (propertys.Count(x => x.Name == "CreateUserName") > 0 && isAdd)
+            {
+                dic.Add("CreateUserName", user.UserName);
+            }
+            if (propertys.Count(x => x.Name == "UpdateUserId") > 0)
+            {
+                dic.Add("UpdateUserId", user.UserId);
+            }
+            if (propertys.Count(x => x.Name == "UpdateUserName") > 0)
+            {
+                dic.Add("UpdateUserName", user.UserName);
+            }
+            if (propertys.Count(x => x.Name == "UpdateTime") > 0)
+            {
+                dic.Add("UpdateTime", DateTime.Now);
+            }
+            opt.UserId = user.UserId;
+            opt.UserName = user.UserName;
+            opt.UserClientIp = GetIP();
+
+            return dic;
         }
     }
 }

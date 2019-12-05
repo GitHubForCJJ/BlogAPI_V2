@@ -15,6 +15,7 @@ namespace CJJ.Blog.Apiv2
         public string BlogNum { get; set; }
         public string Commentid { get; set; }
         public DateTime CreateTime { get; set; }
+        public string Token { get; set; }
 
     }
 }
