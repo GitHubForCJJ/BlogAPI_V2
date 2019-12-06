@@ -61,8 +61,22 @@ namespace CJJ.Blog.Apiv2.Controllers
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
                 var retlist = BlogHelper.GetModelByNum(model.Num);
+                if (retlist != null)
+                {
+                    var count = BlogHelper.GetCount_ArticlePraise(new Dictionary<string, object>()
+                    {
+                        {nameof(ArticlePraise.BlogNum),model.Num },
+                        {nameof(ArticlePraise.IsDeleted),0 },
+                        {nameof(ArticlePraise.States),0 }
+                    });
+                    if (count == 0)
+                    {
+                        count = 1;
+                    }
+                    retlist.Start = count;
+                }
 
-                #region 访问次数
+                #region 异步添加访问次数
 
                 Task.Run(() =>
                 {
@@ -73,7 +87,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                     };
                     var updic = new Dictionary<string, object>()
                     {
-                        {nameof(Bloginfo.BlogNum),retlist.Views+1 },
+                        {nameof(Bloginfo.Views),retlist.Views+1 },
                     };
                     BlogHelper.UpdateByWhere_Bloginfo(updic, dic, new Service.Models.View.OpertionUser());
                 });
@@ -152,6 +166,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         [HttpPost]
         public JsonResponse AddPraise([FromBody]CommentView model)
         {
+            var res = new Result { IsSucceed = false };
             try
             {
                 if (string.IsNullOrEmpty(model.Token) || string.IsNullOrEmpty(model.BlogNum))
@@ -165,12 +180,50 @@ namespace CJJ.Blog.Apiv2.Controllers
                     {nameof(ArticlePraise.MemberId),mem.UserId },
                     {nameof(ArticlePraise.BlogNum),model.BlogNum }
                 };
+                var ap = BlogHelper.GetModelByWhere_ArticlePraise(dic);
                 var opt = new OpertionUser();
-                dic = UtilConst.AddBaseInfo<ArticlePraise>(dic, model.Token, true,ref opt);
+                //取消点赞
+                if (ap != null && ap?.IsDeleted == 0)
+                {
+                    dic.Add(nameof(ArticlePraise.IsDeleted), 1);
+                    dic = UtilConst.AddBaseInfo<ArticlePraise>(dic, model.Token, false, ref opt);
+                    res = BlogHelper.Update_ArticlePraise(dic, ap.KID, opt);
+                }
+                //点赞
+                else
+                {
+                    dic = UtilConst.AddBaseInfo<ArticlePraise>(dic, model.Token, true, ref opt);
+                    res = BlogHelper.Add_ArticlePraise(dic, opt);
+                }
 
-                var ret = BlogHelper.Add_ArticlePraise(dic,opt);
+                return new JsonResponse { Code = res.IsSucceed ? 0 : 1, Data = res };
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "BlogController/AddPraise");
+                return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
+            }
+        }
+        /// <summary>
+        /// 查询是否点赞
+        /// </summary>
+        /// <param name="model">{}</param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResponse IsOrNotPraise([FromBody]UpdateView model)
+        {
+            try
+            {
+                if (model == null || model.Where == null)
+                {
+                    return new JsonResponse { Code = 1, Msg = "参数不合法" };
+                }
+                model.Where.Add(nameof(ArticlePraise.IsDeleted), 0);
 
-                return new JsonResponse { Code = ret.IsSucceed?0:1,Data=ret };
+
+                var ret = BlogHelper.GetModelByWhere_ArticlePraise(model.Where);
+
+                return new JsonResponse { Code = 0, Data = ret?.KID > 0 ? true : false };
             }
             catch (Exception ex)
             {
