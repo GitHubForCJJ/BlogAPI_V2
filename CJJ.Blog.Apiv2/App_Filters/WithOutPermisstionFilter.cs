@@ -20,7 +20,7 @@ namespace CJJ.Blog.Apiv2.App_Filters
     {
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
-            if (!ConfigHelper.GetConfToBool("IsDebug"))
+            if (ConfigHelper.GetConfToBool("IsDebug"))
             {
                 return;
             }

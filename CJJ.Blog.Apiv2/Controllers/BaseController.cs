@@ -10,6 +10,7 @@ using CJJ.Blog.Apiv2.Helpers;
 using Newtonsoft.Json;
 using System.Web;
 using CJJ.Blog.Service.Models.View;
+using Newtonsoft.Json.Converters;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -26,7 +27,11 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <returns></returns>
         public JsonResponse FastResponse(object data, string token, int code = 0, string msg = "")
         {
-            var bdata = JsonConvert.SerializeObject(data);
+            var setting = new JsonSerializerSettings { };
+            IsoDateTimeConverter timeFormat = new IsoDateTimeConverter();
+            timeFormat.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+
+            var bdata = JsonConvert.SerializeObject(data, timeFormat);
             if (ConfigHelper.GetConfToBool("IsDebug"))
             {
                 return new JsonResponse

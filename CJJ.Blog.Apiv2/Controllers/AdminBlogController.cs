@@ -62,12 +62,12 @@ namespace CJJ.Blog.Apiv2.Controllers
             try
             {
                 UpdateView up = model?.Data?.ToString().DeserializeObject<UpdateView>();
-                if (up == null || up.KID <= 0)
+                if (up == null || string.IsNullOrEmpty(up.Num))
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
 
-                var entity = BlogHelper.GetModelByKID_Bloginfo(up.KID);
+                var entity = BlogHelper.GetModelByNum(up.Num);
                 if (entity == null)
                 {
                     return new JsonResponse { Code = 1, Msg = $"暂未查询到{up.KID}该信息" };
