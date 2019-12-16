@@ -25,7 +25,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="code"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public JsonResponse FastResponse(object data, string token, int code = 0, string msg = "")
+        public JsonResponse FastResponse(object data, string token, int code = 0, int count = 0, string msg = "")
         {
             var setting = new JsonSerializerSettings { };
             IsoDateTimeConverter timeFormat = new IsoDateTimeConverter();
@@ -38,6 +38,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     Code = code,
                     Data = bdata,
+                    Count= count,
                     Msg = msg
                 };
             }
@@ -48,7 +49,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     Code = code,
                     Data = encrydata,
-                    Msg = msg
+                    Msg = msg,
+                    Count = count,
                 };
             }
 

@@ -41,7 +41,18 @@ namespace CJJ.Blog.Apiv2.Controllers
                     up.Where = new Dictionary<string, object>();
                 }
                 var list = BlogHelper.GetJsonListPage_Bloginfo(model.Page, model.Limit, "CreateTime desc", up.Where);
-                return FastResponse(list.data, model.Token, list.code.Toint());
+                if (list.count > 0)
+                {
+                    var types = BlogHelper.GetList_Category(new Dictionary<string, object>()
+                    {
+                        {nameof(Category.States),0 }
+                    });
+                    list.data.ForEach((item) =>
+                    {
+                        item.Extend4 = types.FirstOrDefault(x => x.KID == item.Type)?.Name;
+                    });
+                }
+                return FastResponse(list.data, model.Token, list.code.Toint(),list.count.Toint());
 
             }
             catch (Exception ex)
@@ -101,22 +112,23 @@ namespace CJJ.Blog.Apiv2.Controllers
                 var content = up.Update[nameof(Blogcontent.Content)].ToString();
                 var blognum = Guid.NewGuid().ToString().Replace("-", "");
 
+
                 var infodic = AddBaseInfo<Bloginfo>(up.Update, model.Token, true, ref opt);
                 infodic.Add(nameof(Bloginfo.BlogNum), blognum);
-                var contdic = AddBaseInfo<Blogcontent>(up.Update, model.Token, true, ref opt);
-                contdic.Add(nameof(Blogcontent.BloginfoNum), blognum);
+                //var contdic = AddBaseInfo<Blogcontent>(updic, model.Token, true, ref opt);
+                infodic.Add(nameof(Blogcontent.BloginfoNum), blognum);
 
                 var res1 = BlogHelper.Add_Bloginfo(infodic, opt);
-                var res2 = BlogHelper.Add_Blogcontent(contdic, opt);
+                var res2 = BlogHelper.Add_Blogcontent(infodic, opt);
                 if (!res1.IsSucceed || !res2.IsSucceed)
                 {
                     return new JsonResponse { Code = 1, Msg = $"添加失败{res1.SerializeObject()};{res2.SerializeObject()}" };
                 }
-                return FastResponse("", model.Token, 0, "添加成功");
+                return FastResponse("", model.Token, 0, 0,"添加成功");
             }
             catch (Exception ex)
             {
-                LogHelper.WriteLog(ex, "AdminBlogController/GetList_Blog");
+                LogHelper.WriteLog(ex, "AdminBlogController/AddItemBlog");
                 return new JsonResponse { Code = 1, Msg = "程序视乎开小差" + ex.Message };
             }
         }
@@ -140,7 +152,6 @@ namespace CJJ.Blog.Apiv2.Controllers
 
                 var infodic = AddBaseInfo<Bloginfo>(up.Update, model.Token, false, ref opt);
 
-                var contdic = AddBaseInfo<Blogcontent>(up.Update, model.Token, false, ref opt);
                 var dicwhere = new Dictionary<string, object>()
                 {
                     {nameof(Bloginfo.BlogNum),up.Num }
@@ -151,12 +162,12 @@ namespace CJJ.Blog.Apiv2.Controllers
                 };
 
                 var res1 = BlogHelper.UpdateByWhere_Bloginfo(infodic, dicwhere, opt);
-                var res2 = BlogHelper.UpdateByWhere_Blogcontent(contdic,dicwhere2, opt);
+                var res2 = BlogHelper.UpdateByWhere_Blogcontent(infodic, dicwhere2, opt);
                 if (!res1.IsSucceed || !res2.IsSucceed)
                 {
                     return new JsonResponse { Code = 1, Msg = $"编辑失败{res1.SerializeObject()};{res2.SerializeObject()}" };
                 }
-                return FastResponse("", model.Token, 0, "编辑成功");
+                return FastResponse("", model.Token, 0, 0,"编辑成功");
             }
             catch (Exception ex)
             {

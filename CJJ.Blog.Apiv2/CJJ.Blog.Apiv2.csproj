@@ -122,6 +122,7 @@
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\AdminBlogController.cs" />
     <Compile Include="Controllers\BlogController.cs" />
+    <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\CommentController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MemberController.cs" />
