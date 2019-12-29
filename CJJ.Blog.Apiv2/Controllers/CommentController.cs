@@ -10,6 +10,11 @@ using System.Web.Http;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
+
+    /// <summary>
+    /// 评论相关
+    /// </summary>
+    /// <seealso cref="System.Web.Http.ApiController" />
     public class CommentController : ApiController
     {
         /// <summary>
@@ -17,11 +22,11 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse GetBlogComment(string blogNum)
+        public JsonResponse GetBlogComments(BaseViewModel model)
         {
             try
             {
-                if (blogNum.Length != 32)
+                if (model==null||model.Num.Length != 32)
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
@@ -29,11 +34,11 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     {nameof(Comment.IsDeleted),0 },
                     {nameof(Comment.States),0 },
-                    {nameof(Comment.BlogNum), blogNum}
+                    {nameof(Comment.BlogNum), model.Num}
                 };
                 var alllist = BlogHelper.GetList_Comment(dic);
 
-                return new JsonResponse { Code = 1, Data = alllist };
+                return new JsonResponse { Code = 0, Data = alllist };
             }
             catch (Exception ex)
             {
