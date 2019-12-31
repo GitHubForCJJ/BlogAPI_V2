@@ -30,12 +30,12 @@ namespace CJJ.Blog.Apiv2.Controllers
                 }
                 var qrkey = model.Update["QrcodeKey"].ToString();
                 var qrcode = model.Update["Qrcode"].ToString();
-    
+
 
                 var qr = CacheHelper.GetCacheItem(qrkey)?.ToString() ?? "";
                 if (qr != qrcode)
                 {
-                    return new JsonResponse { Code = 1, Msg = "验证码错误"+ qr+"{"+ qrkey };
+                    return new JsonResponse { Code = 1, Msg = "验证码错误" + qr + "{" + qrkey };
                 }
                 var userAccount = model.Update[nameof(Member.UserAccount)].ToString();
                 var mem = BlogHelper.GetModelByWhere_Member(new Dictionary<string, object>
@@ -101,6 +101,10 @@ namespace CJJ.Blog.Apiv2.Controllers
                 }
 
                 var res = BlogHelper.MemberLogin(model.UserAccount, model.UserPassword, "0", UtilConst.GetIP(), "", "");
+                if (res != null)
+                {
+                    res.MemberInfo.UserPassword = "";
+                }
 
                 return new JsonResponse { Code = res.IsSucceed ? 0 : 1, Msg = res.Message, Data = res };
             }

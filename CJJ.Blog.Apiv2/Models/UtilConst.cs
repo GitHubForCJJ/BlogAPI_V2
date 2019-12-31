@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using CJJ.Blog.Service.Model.View;
+using FastDev.Log;
 
 namespace CJJ.Blog.Apiv2.Models
 {
@@ -51,6 +53,11 @@ namespace CJJ.Blog.Apiv2.Models
             }
         }
 
+        /// <summary>
+        /// 获取操作者信息
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns></returns>
         public static OpertionUser GetLoginOpt(string token)
         {
             OpertionUser opt = null;
@@ -82,6 +89,27 @@ namespace CJJ.Blog.Apiv2.Models
 
             }
             return opt;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns></returns>
+        public static SysLoginUser Memberinfo(string token)
+        {
+            try
+            {
+                var type = token.Substring(31, 1).Toint();
+                var sysuser = BlogHelper.GetSysLoginUserByToken(token);
+                return sysuser;
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "UtilConst/Memberinfo");
+                return null;
+            }
+
         }
 
         /// <summary>
