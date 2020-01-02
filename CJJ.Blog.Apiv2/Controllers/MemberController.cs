@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using CJJ.Blog.Service.Models.View;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -35,7 +36,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 var qr = CacheHelper.GetCacheItem(qrkey)?.ToString() ?? "";
                 if (qr != qrcode)
                 {
-                    return new JsonResponse { Code = 1, Msg = "验证码错误" + qr + "{" + qrkey };
+                    return new JsonResponse { Code = 1, Msg = "验证码错误" };
                 }
                 var userAccount = model.Update[nameof(Member.UserAccount)].ToString();
                 var mem = BlogHelper.GetModelByWhere_Member(new Dictionary<string, object>
@@ -76,7 +77,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 var rand = new Random();
                 var qrcode = rand.Next(1000, 9999);
                 CacheHelper.AddCacheItem(model.QrcodeKey, qrcode.ToString());
-                return new JsonResponse { Code = 0, Msg = $"key是{model.QrcodeKey}二维码是{qrcode}" };
+                return new JsonResponse { Code = 0, Msg = $"hello 验证码是{qrcode}" };
             }
             catch (Exception ex)
             {
@@ -101,7 +102,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 }
 
                 var res = BlogHelper.MemberLogin(model.UserAccount, model.UserPassword, "0", UtilConst.GetIP(), "", "");
-                if (res != null)
+                if (res != null && res.IsSucceed)
                 {
                     res.MemberInfo.UserPassword = "";
                 }
@@ -111,6 +112,51 @@ namespace CJJ.Blog.Apiv2.Controllers
             catch (Exception ex)
             {
                 LogHelper.WriteLog(ex, "MemberController/RegistItemMember");
+                return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex };
+            }
+        }
+        /// <summary>
+        /// 会员重置密码
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResponse ResetPsw([FromBody]UpdateView model)
+        {
+            try
+            {
+                if (model == null || model.Update == null || !model.Update.ContainsKey(nameof(Member.UserAccount)))
+                {
+                    return new JsonResponse { Code = 1, Msg = "参数不合法" };
+                }
+                var qrkey = model.Update["QrcodeKey"].ToString();
+                var qrcode = model.Update["Qrcode"].ToString();
+
+
+                var qr = CacheHelper.GetCacheItem(qrkey)?.ToString() ?? "";
+                if (qr != qrcode)
+                {
+                    return new JsonResponse { Code = 1, Msg = "验证码错误请重试" };
+                }
+                var userAccount = model.Update[nameof(Member.UserAccount)].ToString();
+                var mem = BlogHelper.GetModelByWhere_Member(new Dictionary<string, object>
+                {
+                    {nameof(Member.IsDeleted),0 },
+                    {nameof(Member.UserAccount), userAccount}
+                });
+                if (mem == null || mem?.KID <= 0)
+                {
+                    return new JsonResponse { Code = 1, Msg = "该账户不存在" };
+                }
+                model.Update.Add(nameof(Member.UpdateTime),DateTime.Now);
+                model.Update.Add(nameof(Member.UpdateUserId), mem.UpdateUserId);
+                model.Update.Add(nameof(Member.UpdateUserName), mem.UpdateUserName);
+                var res = BlogHelper.Update_Member(model.Update, mem.KID, new OpertionUser());
+
+                return new JsonResponse { Code = res.IsSucceed ? 0 : 1, Msg = res.Message };
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "MemberController/ResetPsw");
                 return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex };
             }
         }

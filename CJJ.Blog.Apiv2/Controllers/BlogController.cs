@@ -61,19 +61,9 @@ namespace CJJ.Blog.Apiv2.Controllers
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
                 var retlist = BlogHelper.GetModelByNum(model.Num);
-                if (retlist != null)
+                if (retlist != null && retlist.Start == 0)
                 {
-                    var count = BlogHelper.GetCount_ArticlePraise(new Dictionary<string, object>()
-                    {
-                        {nameof(ArticlePraise.BlogNum),model.Num },
-                        {nameof(ArticlePraise.IsDeleted),0 },
-                        {nameof(ArticlePraise.States),0 }
-                    });
-                    if (count == 0)
-                    {
-                        count = 1;
-                    }
-                    retlist.Start = count;
+                    retlist.Start = 1;
                 }
 
                 #region 异步添加访问次数
@@ -223,11 +213,11 @@ namespace CJJ.Blog.Apiv2.Controllers
 
                 var ret = BlogHelper.GetModelByWhere_ArticlePraise(model.Where);
 
-                return new JsonResponse { Code = 0, Data = ret?.KID > 0 ? true : false };
+                return new JsonResponse { Code = 0, Data = ret?.KID > 0 };
             }
             catch (Exception ex)
             {
-                LogHelper.WriteLog(ex, "BlogController/AddPraise");
+                LogHelper.WriteLog(ex, "BlogController/IsOrNotPraise");
                 return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
             }
         }
