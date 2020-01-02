@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 
 namespace CJJ.Blog.Apiv2.Controllers
@@ -182,6 +183,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 //点赞
                 else
                 {
+                    dic.Add(nameof(ArticlePraise.IpAddress), GetIP());
                     dic = UtilConst.AddBaseInfo<ArticlePraise>(dic, model.Token, true, ref opt);
                     res = BlogHelper.Add_ArticlePraise(dic, opt);
                 }
@@ -192,6 +194,37 @@ namespace CJJ.Blog.Apiv2.Controllers
             {
                 LogHelper.WriteLog(ex, "BlogController/AddPraise");
                 return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
+            }
+        }
+        /// <summary>
+        /// 获取客户端IP地址
+        /// </summary>
+        /// <returns>System.String.</returns>
+        public string GetIP()
+        {
+            try
+            {
+                string result = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+                if (string.IsNullOrEmpty(result))
+                {
+                    result = HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
+                }
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    result = HttpContext.Current.Request.UserHostAddress;
+                }
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    return "0.0.0.0";
+                }
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return "0.0.0.0";
             }
         }
         /// <summary>
