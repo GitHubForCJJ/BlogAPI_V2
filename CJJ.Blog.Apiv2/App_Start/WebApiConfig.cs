@@ -17,7 +17,10 @@ namespace CJJ.Blog.Apiv2
             });
 
             // Web API 跨域
-            var globalCors = new System.Web.Http.Cors.EnableCorsAttribute("*", "*", "*")
+            var allowOrigins = "*";//最好来自配置文件夹
+            var allowHeaders = "*";//最好来自配置文件夹
+            var allowMethods = "*";//最好来自配置文件夹
+            var globalCors = new System.Web.Http.Cors.EnableCorsAttribute(allowOrigins, allowHeaders, allowMethods)
             {
                 SupportsCredentials = true
             };

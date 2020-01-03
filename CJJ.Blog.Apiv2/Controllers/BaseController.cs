@@ -25,6 +25,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="code"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
+        [HiddenApi]
         public JsonResponse FastResponse(object data, string token, int code = 0, int count = 0, string msg = "")
         {
             var setting = new JsonSerializerSettings { };
@@ -60,6 +61,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// 获取客户端IP地址
         /// </summary>
         /// <returns>System.String.</returns>
+        [HiddenApi]
         public static string GetIP()
         {
             try
@@ -97,6 +99,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="isAdd">if set to <c>true</c> [is add].</param>
         /// <param name="opt">The opt.</param>
         /// <returns></returns>
+        [HiddenApi]
         public static Dictionary<string, object> AddBaseInfo<T>(Dictionary<string, object> dic, string token, bool isAdd, ref OpertionUser opt)
         {
             var user = UtilConst.GetLoginOpt(token);

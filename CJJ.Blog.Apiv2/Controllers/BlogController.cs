@@ -18,6 +18,10 @@ using System.Web.Http;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
+    /// <summary>
+    /// 博客相关
+    /// </summary>
+    /// <seealso cref="System.Web.Http.ApiController" />
     public class BlogController : ApiController
     {
         /// <summary>

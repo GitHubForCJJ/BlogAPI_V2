@@ -14,6 +14,10 @@ using CJJ.Blog.Service.Models.View;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
+    /// <summary>
+    /// 会员相关
+    /// </summary>
+    /// <seealso cref="System.Web.Http.ApiController" />
     public class MemberController : ApiController
     {
         /// <summary>
@@ -90,6 +94,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <summary>
         /// 会员登录
         /// </summary>
+        /// <param name="model">The model.</param>
         /// <returns></returns>
         [HttpPost]
         public JsonResponse MemberLogin([FromBody]RegistModel model)
@@ -118,6 +123,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <summary>
         /// 会员重置密码
         /// </summary>
+        /// <param name="model">The model.</param>
         /// <returns></returns>
         [HttpPost]
         public JsonResponse ResetPsw([FromBody]UpdateView model)

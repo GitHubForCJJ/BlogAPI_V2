@@ -14,11 +14,16 @@ using System.Web.Http;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
+    /// <summary>
+    /// 管理端登录相关
+    /// </summary>
+    /// <seealso cref="System.Web.Http.ApiController" />
     public class LoginController : ApiController
     {
         /// <summary>
         /// 管理端密码登录
         /// </summary>
+        /// <param name="model">The model.</param>
         /// <returns></returns>
         [HttpPost]
         public JsonResponse Login([FromBody] LoginModel model)
@@ -51,8 +56,10 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <summary>
         /// 获取验证码图片
         /// </summary>
-        /// <param name="authcodekey">?authcodekey=asdasdas</param>
-        /// <returns>HttpResponseMessage.</returns>
+        /// <param name="authCodeKey">The authentication code key.</param>
+        /// <returns>
+        /// HttpResponseMessage.
+        /// </returns>
         [HttpGet]
         public HttpResponseMessage GetAuthCode(string authCodeKey)
         {

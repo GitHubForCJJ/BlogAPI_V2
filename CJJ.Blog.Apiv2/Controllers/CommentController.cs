@@ -54,6 +54,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <summary>
         /// 添加一个评论
         /// </summary>
+        /// <param name="model">The model.</param>
         /// <returns></returns>
         [HttpPost]
         public JsonResponse AddItem(CommentView model)

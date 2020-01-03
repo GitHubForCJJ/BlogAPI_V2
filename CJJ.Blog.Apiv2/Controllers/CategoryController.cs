@@ -10,6 +10,10 @@ using System.Web.Http;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
+    /// <summary>
+    /// 分类相关
+    /// </summary>
+    /// <seealso cref="CJJ.Blog.Apiv2.Controllers.BaseController" />
     public class CategoryController : BaseController
     {
         /// <summary>
