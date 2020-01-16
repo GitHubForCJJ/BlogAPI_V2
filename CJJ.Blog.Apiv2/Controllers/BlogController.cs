@@ -42,7 +42,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                     dicwhere.Add(nameof(Bloginfo.Type), model.KID);
                 }
                 var retlist = BlogHelper.GetJsonListPage_Bloginfo(model.Page, model.Limit, "CreateTime desc", dicwhere);
-                return new JsonResponse { Code = retlist.code.Toint(), Count = retlist.code.Toint() == 0 ? retlist.data.Count() : 0, Data = retlist.code.Toint() == 0 ? retlist.data : null };
+                return new JsonResponse { Code = 0, Data = retlist?.data, Count = retlist.count };
 
             }
             catch (Exception ex)
