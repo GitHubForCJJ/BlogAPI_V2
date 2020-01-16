@@ -119,10 +119,10 @@ namespace CJJ.Blog.Apiv2.Controllers
                 infodic.Add(nameof(Blogcontent.BloginfoNum), blognum);
 
                 var res1 = BlogHelper.Add_Bloginfo(infodic, opt);
-                var res2 = BlogHelper.Add_Blogcontent(infodic, opt);
-                if (!res1.IsSucceed || !res2.IsSucceed)
+                //var res2 = BlogHelper.Add_Blogcontent(infodic, opt);
+                if (!res1.IsSucceed)
                 {
-                    return new JsonResponse { Code = 1, Msg = $"添加失败{res1.SerializeObject()};{res2.SerializeObject()}" };
+                    return new JsonResponse { Code = 1, Msg = $"添加失败{res1.SerializeObject()};" };
                 }
                 return FastResponse("", model.Token, 0, 0, "添加成功");
             }
