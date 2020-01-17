@@ -15,6 +15,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -22,6 +23,7 @@ namespace CJJ.Blog.Apiv2.Controllers
     /// 博客相关
     /// </summary>
     /// <seealso cref="System.Web.Http.ApiController" />
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class BlogController : ApiController
     {
         /// <summary>
