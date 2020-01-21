@@ -208,5 +208,42 @@ namespace CJJ.Blog.Apiv2.Controllers
                 return new JsonResponse { Code = 1, Msg = "程序视乎开小差" + ex.Message };
             }
         }
+
+        /// <summary>
+        /// 删除博客
+        /// </summary>
+        /// <param name="model">{"num":"96fcdfabc9b0445dab10f2971bf4b127 博客编号"}</param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResponse DeleteItemBlog([FromBody] JsonRequest model)
+        {
+            try
+            {
+                UpdateView up = model?.Data?.ToString().DeserializeObject<UpdateView>();
+                if (up == null || up.Update == null || string.IsNullOrEmpty(up.Num))
+                {
+                    return new JsonResponse { Code = 1, Msg = "参数不合法" };
+                }
+                var opt = new OpertionUser();
+                up.Update = new Dictionary<string, object>
+                {
+                    {nameof(Bloginfo.IsDeleted),1 }
+                };
+
+                var infodic = AddBaseInfo<Bloginfo>(up.Update, model.Token, false, ref opt);
+
+                var dicwhere = new Dictionary<string, object>()
+                {
+                    {nameof(Bloginfo.BlogNum),up.Num }
+                };
+                var res1 = BlogHelper.UpdateByWhere_Bloginfo(infodic, dicwhere, opt);
+                return FastResponse(res1, model.Token, 0, 0, res1.Message);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "AdminBlogController/DeleteItemBlog");
+                return new JsonResponse { Code = 1, Msg = "程序视乎开小差" + ex.Message };
+            }
+        }
     }
 }
