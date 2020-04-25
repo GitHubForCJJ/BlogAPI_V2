@@ -11,12 +11,40 @@ using Newtonsoft.Json;
 using System.Web;
 using CJJ.Blog.Service.Models.View;
 using Newtonsoft.Json.Converters;
+using FastDev.Common.Extension;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
+    /// <summary>
+    /// 菜单相关
+    /// </summary>
     [WithOutPermisstion]
     public class BaseController : ApiController
     {
+        /// <summary>
+        /// LayerDemo自定义Json格式.
+        /// </summary>
+        /// <param name="data">数据实体</param>
+        /// <param name="token">The token.</param>
+        /// <param name="retMsg">错误信息</param>
+        /// <param name="reqHash">The req hash.</param>
+        /// <param name="retCode">回应编码 0正常 成功,其他数据为失败</param>
+        /// <param name="retCnt">当为数据分页时,需要给条数,以便分页</param>
+        /// <returns>JsonResult.</returns>
+        [HiddenApi]
+        public JsonResponse FastJson(object data, string token = "", int retCode = 0, string retMsg = "请求成功", int retCnt = 0, string reqHash = "")
+        {
+            if (ConfigUtil.Isdebug)
+            {
+                data = data.SerializeObject();
+            }
+            else
+            {
+                data = Des.Encrypt(data.SerializeObject(), TokenHelper.GetKeyByToken(token, 8));
+            }
+
+            return new JsonResponse() { Code = retCode, Count = retCnt, Msg = retMsg, Data = data };
+        }
         /// <summary>
         /// 加密的返回，前端根据code来判断是否处理数据
         /// </summary>

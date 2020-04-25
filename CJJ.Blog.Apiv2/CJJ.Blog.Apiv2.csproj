@@ -142,6 +142,7 @@
     <Compile Include="Controllers\CommentController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MemberController.cs" />
+    <Compile Include="Controllers\MenuController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -149,6 +150,7 @@
     <Compile Include="Models\JsonRequest.cs" />
     <Compile Include="Models\JsonResponse.cs" />
     <Compile Include="Models\LoginModel.cs" />
+    <Compile Include="Models\UserInfoUtil.cs" />
     <Compile Include="ViewModels\GetQrcodeView.cs" />
     <Compile Include="ViewModels\RegistModel.cs" />
     <Compile Include="Models\UtilConst.cs" />
