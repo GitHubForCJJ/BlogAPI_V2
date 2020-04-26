@@ -22,7 +22,7 @@ namespace CJJ.Blog.Apiv2
         /// <summary>
         /// 请求时间
         /// </summary>
-        public TimeSpan TimeSpan { get; set; }
+        public double Timestamp { get; set; }
         /// <summary>
         /// 登录token
         /// </summary>

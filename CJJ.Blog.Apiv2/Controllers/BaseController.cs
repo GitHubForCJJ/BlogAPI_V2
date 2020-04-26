@@ -6,12 +6,15 @@ using System.Net.Http;
 using CJJ.Blog.Apiv2.App_Filters;
 using System.Web.Http;
 using CJJ.Blog.Apiv2.Models;
-using CJJ.Blog.Apiv2.Helpers;
 using Newtonsoft.Json;
 using System.Web;
 using CJJ.Blog.Service.Models.View;
 using Newtonsoft.Json.Converters;
 using FastDev.Common.Extension;
+using Blog.Common;
+using Blog.Common.Encrypt;
+using Blog.Common.Helpers;
+using FastDev.Log;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -34,24 +37,34 @@ namespace CJJ.Blog.Apiv2.Controllers
         [HiddenApi]
         public JsonResponse FastJson(object data, string token = "", int retCode = 0, string retMsg = "请求成功", int retCnt = 0, string reqHash = "")
         {
-            if (ConfigUtil.Isdebug)
+            try
             {
-                data = data.SerializeObject();
+                if (ConfigUtil.Isdebug)
+                {
+                    data = data.SerializeObject();
+                }
+                else
+                {
+                    data = Des.Encrypt(data.SerializeObject(), TokenHelper.GetKeyByToken(token, 8));
+                }
+
+                return new JsonResponse() { Code = retCode, Count = retCnt, Msg = retMsg, Data = data };
             }
-            else
+            catch (Exception ex)
             {
-                data = Des.Encrypt(data.SerializeObject(), TokenHelper.GetKeyByToken(token, 8));
+                LogHelper.WriteLog(ex, "basecontroller/fastjson");
+                return new JsonResponse() { Code = 1, Msg = "程序错误" + ex.Message };
             }
 
-            return new JsonResponse() { Code = retCode, Count = retCnt, Msg = retMsg, Data = data };
         }
         /// <summary>
         /// 加密的返回，前端根据code来判断是否处理数据
         /// </summary>
         /// <param name="data">原始数据</param>
         /// <param name="token">登录token</param>
-        /// <param name="code"></param>
-        /// <param name="msg"></param>
+        /// <param name="code">The code.</param>
+        /// <param name="count">The count.</param>
+        /// <param name="msg">The MSG.</param>
         /// <returns></returns>
         [HiddenApi]
         public JsonResponse FastResponse(object data, string token, int code = 0, int count = 0, string msg = "")
@@ -67,7 +80,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     Code = code,
                     Data = bdata,
-                    Count= count,
+                    Count = count,
                     Msg = msg
                 };
             }

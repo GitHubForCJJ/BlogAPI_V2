@@ -36,6 +36,7 @@ namespace CJJ.Blog.Apiv2.Controllers
             try
             {
                 var user = UserInfoUtil.UserInfo(model.Token);
+
                 List<Sysmenu> data = BlogHelper.GetListByuserid_Sysmenu(user.Model.KID);
                 return FastJson(data, model.Token);
             }

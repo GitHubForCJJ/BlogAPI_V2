@@ -1,4 +1,4 @@
-﻿using CJJ.Blog.Apiv2.Helpers;
+﻿
 using CJJ.Blog.NetWork.WcfHelper;
 using CJJ.Blog.Service.Models.View;
 using FastDev.Common.Code;
@@ -8,9 +8,13 @@ using System.Linq;
 using System.Web;
 using CJJ.Blog.Service.Model.View;
 using FastDev.Log;
+using Blog.Common.Helpers;
 
 namespace CJJ.Blog.Apiv2.Models
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class UtilConst
     {
         public static string Version = ConfigHelper.GetConfToString("Version");

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Web;
 
-namespace CJJ.Blog.Apiv2.Helpers
+namespace Blog.Common.Helpers
 {
     public class TokenHelper
     {
@@ -24,7 +24,7 @@ namespace CJJ.Blog.Apiv2.Helpers
                     return string.Empty;
                 }
 
-                string key = GetKeyByToken(token);
+                string key = GetKeyByToken(token, 8);
                 return Des.Decrypt(encrydata, key);
 
             }
@@ -34,20 +34,23 @@ namespace CJJ.Blog.Apiv2.Helpers
             }
 
         }
-        public static string GetKeyByToken(string token)
+        /// <summary>
+        /// Gets the key by token.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns></returns>
+        public static string GetKeyByToken(string token, int keylength)
         {
             try
             {
+                int idx = 1;
                 StringBuilder key = new StringBuilder();
                 for (int i = 0; i < token.Length; i++)
                 {
-                    if (i % 2 == 0)
+                    if (i % 2 == 1 && idx <= keylength)
                     {
+                        idx++;
                         key.Append(token[i]);
-                    }
-                    if (key.Length > 8)
-                    {
-                        break;
                     }
                 }
                 return key?.ToString();
@@ -72,7 +75,7 @@ namespace CJJ.Blog.Apiv2.Helpers
                 {
                     return string.Empty;
                 }
-                string key = GetKeyByToken(token);
+                string key = GetKeyByToken(token, 8);
                 return Des.Encrypt(encrydata, key);
             }
             catch

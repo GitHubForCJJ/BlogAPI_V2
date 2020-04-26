@@ -43,12 +43,16 @@ namespace CJJ.Blog.Apiv2.Controllers
                 }
 
                 user = BlogHelper.EmployeePasswordLogin(model.Account, model.Password, UtilConst.GetIP(), UtilConst.Agent, UtilConst.Dns);
+                if (!CJJ.Blog.Apiv2.Models.ConfigUtil.Isdebug)
+                {
+                    user.DataIsEncrypt = true;
+                }
                 return new JsonResponse { Code = user.IsSucceed ? 0 : 1, Data = user };
             }
             catch (Exception ex)
             {
                 LogHelper.WriteLog(ex, "LoginController/Login错误");
-                return new JsonResponse { Code =  1, Msg="系统错误"+ex.Message};
+                return new JsonResponse { Code = 1, Msg = "系统错误" + ex.Message };
             }
 
         }

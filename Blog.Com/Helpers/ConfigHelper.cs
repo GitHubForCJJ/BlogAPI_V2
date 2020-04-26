@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Configuration;
 
-namespace CJJ.Blog.Apiv2.Helpers
+namespace Blog.Common.Helpers
 {
     public class ConfigHelper
     {

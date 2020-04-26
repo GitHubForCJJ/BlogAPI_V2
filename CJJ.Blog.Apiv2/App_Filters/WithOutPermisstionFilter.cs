@@ -1,4 +1,5 @@
-﻿using CJJ.Blog.Apiv2.Helpers;
+﻿
+using Blog.Common.Helpers;
 using FastDev.Common.Encrypt;
 using Newtonsoft.Json;
 using System;
@@ -18,6 +19,10 @@ namespace CJJ.Blog.Apiv2.App_Filters
     /// </summary>
     public class WithOutPermisstionAttribute : ActionFilterAttribute
     {
+        /// <summary>
+        /// 在调用操作方法之前发生。
+        /// </summary>
+        /// <param name="actionContext">操作上下文。</param>
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
             if (ConfigHelper.GetConfToBool("IsDebug"))
@@ -26,10 +31,10 @@ namespace CJJ.Blog.Apiv2.App_Filters
             }
             var model = (JsonRequest)actionContext.ActionArguments["model"];
 
-            var datamd5 = Md5.MD5Encoding(model.Data + model.TimeSpan.ToString(), model.Token);
-            if (!datamd5.Equals(model.Md5))
+            var datamd5 = Md5.MD5Encoding(model.Data + model.Timestamp.ToString(), model.Token);
+            if (model.Md5 != datamd5)
             {
-                actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, "请求数据MD5验证不合法");
+                actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, "请求数据MD5验证不合法" + model.Data + ";" +model.Token + ";" + model.Timestamp.ToString() + ";" + datamd5);
                 return;
             }
             //des解码
