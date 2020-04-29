@@ -1,4 +1,5 @@
-﻿using CJJ.Blog.Apiv2.Models;
+﻿using Blog.Com.Helpers;
+using CJJ.Blog.Apiv2.Models;
 using CJJ.Blog.Apiv2.ViewModels;
 using CJJ.Blog.NetWork.WcfHelper;
 using CJJ.Blog.Service.Model.Data;
@@ -14,6 +15,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Caching;
 using System.Web.Http;
 using System.Web.Http.Cors;
 
@@ -43,8 +45,36 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     dicwhere.Add(nameof(Bloginfo.Type), model.KID);
                 }
-                var retlist = BlogHelper.GetJsonListPage_Bloginfo(model.Page, model.Limit, "CreateTime desc", dicwhere);
-                return new JsonResponse { Code = 0, Data = retlist?.data, Count = retlist.count };
+                string key = ConfigUtil.BlogListCacheKey;
+                List<Bloginfo> alllist = HttpRuntime.Cache.Get(key)?.DeserialObjectToList<Bloginfo>();
+                int cut = 0;
+                if (alllist == null || alllist.Count == 0)
+                {
+                    var chaxun = BlogHelper.GetJsonListPage_Bloginfo(1, 1000, "CreateTime desc", new Dictionary<string, object>() {
+                        {nameof(Bloginfo.IsDeleted),0 },
+                        {nameof(Bloginfo.States),0 }
+                    });
+                    if (chaxun.code.Toint() != 0)
+                    {
+                        return new JsonResponse { Code = chaxun.code.Toint(), Data = "", Msg = chaxun.msg };
+                    }
+                    if (chaxun.data != null && chaxun.data.Count > 0)
+                    {
+                        HttpRuntime.Cache.Insert(CJJ.Blog.Apiv2.Models.ConfigUtil.BlogListCacheKey, chaxun.data.SerializObject(), null, DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+                    }
+                }
+                List<Bloginfo> retlist = null;
+                if (model.KID > 0)
+                {
+                    retlist = alllist.Where(x => x.Type == model.KID)?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
+                }
+                else
+                {
+                    retlist= alllist?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
+                }
+
+
+                return new JsonResponse { Code = 0, Data = retlist, Count = cut };
 
             }
             catch (Exception ex)
@@ -67,10 +97,17 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
-                var retlist = BlogHelper.GetModelByNum(model.Num);
-                if (retlist != null && retlist.Start == 0)
+                string key = $"{CJJ.Blog.Apiv2.Models.ConfigUtil.BlogListCacheKeyPrefix}{model.Num}";
+                BloginfoView bloginfoView = HttpRuntime.Cache.Get(key)?.ToString()?.DeserialObject<BloginfoView>();
+                if (bloginfoView == null)
                 {
-                    retlist.Start = 1;
+                    bloginfoView = BlogHelper.GetModelByNum(model.Num);
+                    HttpRuntime.Cache.Insert(key, bloginfoView.SerializObject(), null, DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+                }
+
+                if (bloginfoView != null && bloginfoView.Start == 0)
+                {
+                    bloginfoView.Start = 1;
                 }
 
                 #region 异步添加访问次数
@@ -84,14 +121,14 @@ namespace CJJ.Blog.Apiv2.Controllers
                     };
                     var updic = new Dictionary<string, object>()
                     {
-                        {nameof(Bloginfo.Views),retlist.Views+1 },
+                        {nameof(Bloginfo.Views),bloginfoView.Views+1 },
                     };
                     BlogHelper.UpdateByWhere_Bloginfo(updic, dic, new Service.Models.View.OpertionUser());
                 });
 
                 #endregion
 
-                return new JsonResponse { Code = retlist != null ? 0 : 1, Data = retlist != null ? retlist : null };
+                return new JsonResponse { Code = bloginfoView != null ? 0 : 1, Data = bloginfoView != null ? bloginfoView : null };
             }
             catch (Exception ex)
             {
@@ -144,7 +181,14 @@ namespace CJJ.Blog.Apiv2.Controllers
                     {nameof(Category.IsDeleted),0 },
                     {nameof(Category.States),0 }
                 };
-                var retlist = BlogHelper.GetList_Category(dic);
+                string key = ConfigUtil.BlogTypeListCacheKey;
+                List<Category> retlist = HttpRuntime.Cache.Get(key)?.DeserialObjectToList<Category>();
+                if (retlist == null || retlist.Count == 0)
+                {
+                    retlist = BlogHelper.GetList_Category(dic);
+                    HttpRuntime.Cache.Insert(key, retlist.SerializObject(), null, DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+                }
+
                 retlist = retlist?.OrderByDescending(x => x.CreateTime)?.ToList();
 
                 return new JsonResponse { Code = retlist != null ? 0 : 1, Data = retlist };
