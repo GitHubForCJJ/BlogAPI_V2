@@ -37,6 +37,7 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -52,6 +53,7 @@
     <Compile Include="Helpers\Encrypt\SHA1.cs" />
     <Compile Include="Helpers\JsonHelper.cs" />
     <Compile Include="Helpers\TokenHelper.cs" />
+    <Compile Include="Helpers\ValidateCode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

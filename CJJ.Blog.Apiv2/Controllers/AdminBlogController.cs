@@ -12,6 +12,9 @@ using CJJ.Blog.NetWork.WcfHelper;
 using FastDev.Common.Code;
 using CJJ.Blog.Service.Models.Data;
 using CJJ.Blog.Service.Models.View;
+using System.Web;
+using CJJ.Blog.Apiv2.Models;
+using System.Threading.Tasks;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -124,6 +127,11 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     return new JsonResponse { Code = 1, Msg = $"添加失败{res1.SerializeObject()};" };
                 }
+                Task.Run(() =>
+                {
+                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
+                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                });
                 return FastResponse("", model.Token, 0, 0, "添加成功");
             }
             catch (Exception ex)
@@ -161,12 +169,19 @@ namespace CJJ.Blog.Apiv2.Controllers
                     {nameof(Blogcontent.BloginfoNum),up.Num }
                 };
 
+
                 var res1 = BlogHelper.UpdateByWhere_Bloginfo(infodic, dicwhere, opt);
                 var res2 = BlogHelper.UpdateByWhere_Blogcontent(infodic, dicwhere2, opt);
+
                 if (!res1.IsSucceed || !res2.IsSucceed)
                 {
                     return new JsonResponse { Code = 1, Msg = $"编辑失败{res1.SerializeObject()};{res2.SerializeObject()}" };
                 }
+                Task.Run(() =>
+                {
+                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
+                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                });
                 return FastResponse("", model.Token, 0, 0, "编辑成功");
             }
             catch (Exception ex)
@@ -200,6 +215,11 @@ namespace CJJ.Blog.Apiv2.Controllers
                     {nameof(Bloginfo.BlogNum),up.Num }
                 };
                 var res1 = BlogHelper.UpdateByWhere_Bloginfo(infodic, dicwhere, opt);
+                Task.Run(() =>
+                {
+                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
+                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                });
                 return FastResponse(res1, model.Token, 0, 0, res1.Message);
             }
             catch (Exception ex)
@@ -237,6 +257,11 @@ namespace CJJ.Blog.Apiv2.Controllers
                     {nameof(Bloginfo.BlogNum),up.Num }
                 };
                 var res1 = BlogHelper.UpdateByWhere_Bloginfo(infodic, dicwhere, opt);
+                Task.Run(() =>
+                {
+                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
+                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                });
                 return FastResponse(res1, model.Token, 0, 0, res1.Message);
             }
             catch (Exception ex)

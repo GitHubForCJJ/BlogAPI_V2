@@ -60,7 +60,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                     }
                     if (chaxun.data != null && chaxun.data.Count > 0)
                     {
-                        HttpRuntime.Cache.Insert(CJJ.Blog.Apiv2.Models.ConfigUtil.BlogListCacheKey, chaxun.data.SerializObject(), null, DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+                        alllist = chaxun.data;
+                        CacheHelper.AddCacheItem(ConfigUtil.BlogListCacheKey, chaxun.data.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                     }
                 }
                 List<Bloginfo> retlist = null;
@@ -70,9 +71,27 @@ namespace CJJ.Blog.Apiv2.Controllers
                 }
                 else
                 {
-                    retlist= alllist?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
+                    retlist = alllist?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
                 }
 
+                #region 统计访问地址信息
+                Task.Run(() =>
+                {
+                    if (model.KID <= 0)
+                    {
+                        var adddic = new Dictionary<string, object>()
+                    {
+                        {nameof(Access.AccessType),0 },
+                        {nameof(Access.IpAddress),GetIP() },
+                        {nameof(Access.CreateTime),DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") },
+                        {nameof(Access.CreateUserId),1 },
+                        {nameof(Access.CreateUserName),"system" }
+                    };
+                        BlogHelper.Add_Access(adddic, new OpertionUser { });
+                    }
+
+                });
+                #endregion
 
                 return new JsonResponse { Code = 0, Data = retlist, Count = cut };
 
@@ -102,28 +121,64 @@ namespace CJJ.Blog.Apiv2.Controllers
                 if (bloginfoView == null)
                 {
                     bloginfoView = BlogHelper.GetModelByNum(model.Num);
-                    HttpRuntime.Cache.Insert(key, bloginfoView.SerializObject(), null, DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+                    CacheHelper.AddCacheItem(key, bloginfoView.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                 }
+                bloginfoView.Views += 1;
 
-                if (bloginfoView != null && bloginfoView.Start == 0)
+                #region 处理list 和 item 缓存
+                Task.Run(() =>
                 {
-                    bloginfoView.Start = 1;
-                }
+                    CacheHelper.DelCacheItem(key);
+                    CacheHelper.AddCacheItem(key, bloginfoView.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
+                    string alllistkey = ConfigUtil.BlogListCacheKey;
+                    string allinfo = HttpRuntime.Cache.Get(alllistkey)?.ToString();
+                    List<Bloginfo> cachelist = allinfo?.DeserialObjectToList<Bloginfo>();
+                    if (cachelist != null && cachelist.Count > 0)
+                    {
+                        cachelist.FirstOrDefault(x => x.BlogNum == model.Num).Views += 1;
+                        CacheHelper.DelCacheItem(alllistkey);
+                        CacheHelper.AddCacheItem(alllistkey, cachelist.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
+                    }
 
-                #region 异步添加访问次数
+                });
+                #endregion
+
+
+                #region 异步添加访问次数,统计访问地址信息
 
                 Task.Run(() =>
                 {
-                    var dic = new Dictionary<string, object>()
+                    try
+                    {
+                        var dic = new Dictionary<string, object>()
                     {
                         {nameof(Bloginfo.BlogNum),model.Num },
                         {nameof(Bloginfo.IsDeleted),0 }
                     };
-                    var updic = new Dictionary<string, object>()
+                        var bloginfomodel = BlogHelper.GetModelByWhere_Bloginfo(dic);
+                        var updic = new Dictionary<string, object>()
                     {
-                        {nameof(Bloginfo.Views),bloginfoView.Views+1 },
+                        {nameof(Bloginfo.Views),bloginfomodel.Views+1 },
                     };
-                    BlogHelper.UpdateByWhere_Bloginfo(updic, dic, new Service.Models.View.OpertionUser());
+                        BlogHelper.UpdateByWhere_Bloginfo(updic, dic, new Service.Models.View.OpertionUser());
+
+                        var adddic = new Dictionary<string, object>()
+                    {
+                        {nameof(Access.AccessType),1 },
+                        {nameof(Access.IpAddress),GetIP() },
+                        {nameof(Access.BlogName), bloginfoView.Title},
+                        {nameof(Access.BlogNum),model.Num },
+                        {nameof(Access.CreateTime),DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") },
+                            {nameof(Access.CreateUserId),1 },
+                            {nameof(Access.CreateUserName),"system" }
+                    };
+                        BlogHelper.Add_Access(adddic, new OpertionUser { });
+                    }
+                    catch (Exception ex)
+                    {
+                        LogHelper.WriteLog(ex, "BlogController/GetItemBlog 访问次数");
+                    }
+
                 });
 
                 #endregion
@@ -189,7 +244,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                     HttpRuntime.Cache.Insert(key, retlist.SerializObject(), null, DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
                 }
 
-                retlist = retlist?.OrderByDescending(x => x.CreateTime)?.ToList();
+                retlist = retlist?.OrderByDescending(x => x.CreateTime)?.OrderByDescending(x => x.Sort)?.ToList();
 
                 return new JsonResponse { Code = retlist != null ? 0 : 1, Data = retlist };
             }
@@ -205,12 +260,13 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="model">{}</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse AddPraise([FromBody]CommentView model)
+        public JsonResponse AddPraise([FromBody]JsonRequest model)
         {
             var res = new Result { IsSucceed = false };
             try
             {
-                if (string.IsNullOrEmpty(model.Token) || string.IsNullOrEmpty(model.BlogNum))
+                CommentView item = model?.Data.ToString()?.DeserialObject<CommentView>();
+                if (item == null || string.IsNullOrEmpty(item.BlogNum))
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
@@ -219,24 +275,59 @@ namespace CJJ.Blog.Apiv2.Controllers
                 var dic = new Dictionary<string, object>
                 {
                     {nameof(ArticlePraise.MemberId),mem.UserId },
-                    {nameof(ArticlePraise.BlogNum),model.BlogNum }
+                    {nameof(ArticlePraise.BlogNum),item.BlogNum },
+                    {nameof(ArticlePraise.IsDeleted),0 }
                 };
-                var ap = BlogHelper.GetModelByWhere_ArticlePraise(dic);
-                var opt = new OpertionUser();
-                //取消点赞
-                if (ap != null && ap?.IsDeleted == 0)
+                var dodic = new Dictionary<string, object>
                 {
-                    dic.Add(nameof(ArticlePraise.IsDeleted), 1);
-                    dic = UtilConst.AddBaseInfo<ArticlePraise>(dic, model.Token, false, ref opt);
-                    res = BlogHelper.Update_ArticlePraise(dic, ap.KID, opt);
+                    {nameof(ArticlePraise.MemberId),mem.UserId },
+                    {nameof(ArticlePraise.BlogNum),item.BlogNum },
+                };
+                var ap = BlogHelper.GetModelByWhere_ArticlePraise(dodic);
+                var opt = new OpertionUser();
+                bool isadd = true;//记录点赞还是取消点赞
+
+                #region 点赞处理
+                //取消点赞
+                if (ap != null && ap.KID > 0)
+                {
+                    isadd = false;
+                    dodic.Add(nameof(ArticlePraise.IsDeleted), 1);
+                    dodic = UtilConst.AddBaseInfo<ArticlePraise>(dodic, model.Token, false, ref opt);
+                    res = BlogHelper.Update_ArticlePraise(dodic, ap.KID, opt);
+
                 }
                 //点赞
                 else
                 {
-                    dic.Add(nameof(ArticlePraise.IpAddress), GetIP());
-                    dic = UtilConst.AddBaseInfo<ArticlePraise>(dic, model.Token, true, ref opt);
-                    res = BlogHelper.Add_ArticlePraise(dic, opt);
+                    dodic.Add(nameof(ArticlePraise.IpAddress), GetIP());
+                    dodic = UtilConst.AddBaseInfo<ArticlePraise>(dodic, model.Token, true, ref opt);
+                    res = BlogHelper.Add_ArticlePraise(dodic, opt);
                 }
+                #endregion
+
+                #region 处理list 和 item 缓存
+                Task.Run(() =>
+                {
+                    if (res.IsSucceed)
+                    {
+                        string key = $"{CJJ.Blog.Apiv2.Models.ConfigUtil.BlogListCacheKeyPrefix}{item.BlogNum}";
+                        BloginfoView bloginfoView = CacheHelper.GetCacheItem(key)?.ToString()?.DeserialObject<BloginfoView>();
+                        bloginfoView.Start += isadd ? 1 : -1;
+                        CacheHelper.AddCacheItem(key, bloginfoView.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
+                        string alllistkey = ConfigUtil.BlogListCacheKey;
+                        string allinfo = HttpRuntime.Cache.Get(alllistkey)?.ToString();
+                        List<Bloginfo> cachelist = allinfo?.DeserialObjectToList<Bloginfo>();
+                        if (cachelist != null && cachelist.Count > 0)
+                        {
+                            cachelist.FirstOrDefault(x => x.BlogNum == item.BlogNum).Start += isadd ? 1 : -1;
+                            CacheHelper.DelCacheItem(alllistkey);
+                            CacheHelper.AddCacheItem(alllistkey, cachelist.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
+                        }
+                    }
+
+                });
+                #endregion
 
                 return new JsonResponse { Code = res.IsSucceed ? 0 : 1, Data = res };
             }
@@ -280,23 +371,29 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <summary>
         /// 查询是否点赞
         /// </summary>
-        /// <param name="model">{}</param>
+        /// <param name="model">{"where":{"BlogNum":""}}</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse IsOrNotPraise([FromBody]UpdateView model)
+        public JsonResponse IsOrNotPraise([FromBody]JsonRequest model)
         {
             try
             {
-                if (model == null || model.Where == null)
+                UpdateView item = model?.Data?.ToString().DeserialObject<UpdateView>();
+                if (item == null || item.Where == null)
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
-                model.Where.Add(nameof(ArticlePraise.IsDeleted), 0);
+                item.Where.Add(nameof(ArticlePraise.IsDeleted), 0);
+                string blognum = item.Where["BlogNum"].ToString();
 
+                int count = BlogHelper.GetCount_ArticlePraise(new Dictionary<string, object>() {
+                    {nameof(ArticlePraise.BlogNum),blognum },
+                    {nameof(ArticlePraise.IsDeleted),0 }
+                });
 
-                var ret = BlogHelper.GetModelByWhere_ArticlePraise(model.Where);
+                var ret = BlogHelper.GetModelByWhere_ArticlePraise(item.Where);
 
-                return new JsonResponse { Code = 0, Data = ret?.KID > 0 };
+                return new JsonResponse { Code = 0, Data = new{ ArticlePraise= ret?.KID > 0 ,Count=count} };
             }
             catch (Exception ex)
             {

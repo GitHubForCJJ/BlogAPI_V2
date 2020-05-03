@@ -11,6 +11,10 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using CJJ.Blog.Service.Models.View;
+using Blog.Com.Helpers;
+using System.Web;
+using System.Web.Caching;
+using Blog.Com.Helpers;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -25,24 +29,25 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse RegistItemMember([FromBody]UpdateView model)
+        public JsonResponse RegistItemMember([FromBody]JsonRequest model)
         {
             try
             {
-                if (model == null || model.Update == null || !model.Update.ContainsKey(nameof(Member.UserAccount)))
+                UpdateView item = model.Data.ToString()?.DeserialObject<UpdateView>();
+                if (item == null || item.Update == null || !item.Update.ContainsKey(nameof(Member.UserAccount)))
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
-                var qrkey = model.Update["QrcodeKey"].ToString();
-                var qrcode = model.Update["Qrcode"].ToString();
+                var qrkey = item.Update["Qrcodekey"].ToString();
+                var qrcode = item.Update["Qrcode"].ToString();
 
 
-                var qr = CacheHelper.GetCacheItem(qrkey)?.ToString() ?? "";
+                string qr = HttpRuntime.Cache.Get($"Blogimgcode_{qrkey}")?.ToString() ?? "";
                 if (qr != qrcode)
                 {
                     return new JsonResponse { Code = 1, Msg = "验证码错误" };
                 }
-                var userAccount = model.Update[nameof(Member.UserAccount)].ToString();
+                var userAccount = item.Update[nameof(Member.UserAccount)].ToString();
                 var mem = BlogHelper.GetModelByWhere_Member(new Dictionary<string, object>
                 {
                     {nameof(Member.IsDeleted),0 },
@@ -52,10 +57,10 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     return new JsonResponse { Code = 1, Msg = "账户已存在,请直接登录" };
                 }
-                model.Update.Add("CreateTime", DateTime.Now);
-                model.Update.Add("CreateUserId", 1);
-                model.Update.Add(nameof(Member.CreateUserName), "system");
-                var res = BlogHelper.Add_Member(model.Update, new Service.Models.View.OpertionUser());
+                item.Update.Add("CreateTime", DateTime.Now);
+                item.Update.Add("CreateUserId", 1);
+                item.Update.Add(nameof(Member.CreateUserName), "system");
+                var res = BlogHelper.Add_Member(item.Update, new Service.Models.View.OpertionUser());
 
                 return new JsonResponse { Code = res.IsSucceed ? 0 : 1, Msg = res.Message };
             }
@@ -66,26 +71,34 @@ namespace CJJ.Blog.Apiv2.Controllers
             }
         }
         /// <summary>
-        /// 发送验证码
+        /// 发送邮箱验证码
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse SendQrcode([FromBody]GetQrcodeView model)
+        public JsonResponse SendQrcode([FromBody]JsonRequest model)
         {
             try
             {
-                if (string.IsNullOrEmpty(model.UserAccount) || string.IsNullOrEmpty(model.QrcodeKey))
+                GetQrcodeView view = model.Data?.ToString()?.DeserialObject<GetQrcodeView>();
+                if (string.IsNullOrEmpty(view.UserAccount) || string.IsNullOrEmpty(view.QrcodeKey))
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
                 var rand = new Random();
-                var qrcode = rand.Next(1000, 9999);
-                CacheHelper.AddCacheItem(model.QrcodeKey, qrcode.ToString());
+                string key = $"{view.UserAccount}_{view.QrcodeKey}";
+                string checkcode = CacheHelper.GetCacheItem(key)?.ToString();
+                if (!string.IsNullOrEmpty(checkcode))
+                {
+                    return new JsonResponse { Code = 0, Msg = $"验证码已存在{checkcode}" };
+                }
+
+                int qrcode = rand.Next(1000, 9999);
+                CacheHelper.AddCacheItem(key, qrcode.ToString(), DateTime.Now.AddMinutes(30), Cache.NoSlidingExpiration, CacheItemPriority.High);
                 return new JsonResponse { Code = 0, Msg = $"hello 验证码是{qrcode}" };
             }
             catch (Exception ex)
             {
-                LogHelper.WriteLog(ex, "BlogController/GetListBlog");
+                LogHelper.WriteLog(ex, "MemberController/SendQrcode");
                 return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex.Message };
             }
 
@@ -97,16 +110,18 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="model">The model.</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse MemberLogin([FromBody]RegistModel model)
+        public JsonResponse MemberLogin([FromBody]JsonRequest model)
         {
             try
             {
-                if (string.IsNullOrEmpty(model.UserAccount) || string.IsNullOrEmpty(model.UserPassword))
+                RegistModel item = model.Data.ToString()?.DeserialObject<RegistModel>();
+
+                if (string.IsNullOrEmpty(item.UserAccount) || string.IsNullOrEmpty(item.UserPassword))
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
 
-                var res = BlogHelper.MemberLogin(model.UserAccount, model.UserPassword, "0", UtilConst.GetIP(), "", "");
+                var res = BlogHelper.MemberLogin(item.UserAccount, item.UserPassword, "0", UtilConst.GetIP(), "", "");
                 if (res != null && res.IsSucceed)
                 {
                     res.MemberInfo.UserPassword = "";
@@ -126,24 +141,27 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="model">The model.</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse ResetPsw([FromBody]UpdateView model)
+        public JsonResponse ResetPsw([FromBody]JsonRequest model)
         {
             try
             {
-                if (model == null || model.Update == null || !model.Update.ContainsKey(nameof(Member.UserAccount)))
+                UpdateView item = model?.Data.ToString().DeserialObject<UpdateView>();
+                if (model == null || item.Update == null || !item.Update.ContainsKey(nameof(Member.UserAccount)))
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
-                var qrkey = model.Update["QrcodeKey"].ToString();
-                var qrcode = model.Update["Qrcode"].ToString();
+                var qrkey = item.Update["QrcodeKey"].ToString();
+                var qrcode = item.Update["Qrcode"].ToString();
+                var userAccount = item.Update[nameof(Member.UserAccount)].ToString();
 
-
-                var qr = CacheHelper.GetCacheItem(qrkey)?.ToString() ?? "";
+                string key = $"{userAccount}_{qrkey}";
+                var qr = CacheHelper.GetCacheItem(key)?.ToString() ?? "";
                 if (qr != qrcode)
                 {
                     return new JsonResponse { Code = 1, Msg = "验证码错误请重试" };
                 }
-                var userAccount = model.Update[nameof(Member.UserAccount)].ToString();
+                CacheHelper.DelCacheItem(key);
+
                 var mem = BlogHelper.GetModelByWhere_Member(new Dictionary<string, object>
                 {
                     {nameof(Member.IsDeleted),0 },
@@ -153,16 +171,49 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     return new JsonResponse { Code = 1, Msg = "该账户不存在" };
                 }
-                model.Update.Add(nameof(Member.UpdateTime),DateTime.Now);
-                model.Update.Add(nameof(Member.UpdateUserId), mem.UpdateUserId);
-                model.Update.Add(nameof(Member.UpdateUserName), mem.UpdateUserName);
-                var res = BlogHelper.Update_Member(model.Update, mem.KID, new OpertionUser());
+                item.Update.Add(nameof(Member.UpdateTime), DateTime.Now);
+                item.Update.Add(nameof(Member.UpdateUserId), mem.UpdateUserId);
+                item.Update.Add(nameof(Member.UpdateUserName), mem.UpdateUserName);
+                var res = BlogHelper.Update_Member(item.Update, mem.KID, new OpertionUser());
 
                 return new JsonResponse { Code = res.IsSucceed ? 0 : 1, Msg = res.Message };
             }
             catch (Exception ex)
             {
                 LogHelper.WriteLog(ex, "MemberController/ResetPsw");
+                return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex };
+            }
+        }
+        /// <summary>
+        /// 编辑会员 Num字段传会员useraccount
+        /// </summary>
+        /// <param name="model">{}</param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResponse UpdateMember([FromBody]JsonRequest model)
+        {
+            try
+            {
+                UpdateView item = model?.Data.ToString().DeserialObject<UpdateView>();
+                if (model == null || item.Update == null || string.IsNullOrEmpty(item.Num))
+                {
+                    return new JsonResponse { Code = 1, Msg = "参数不合法" };
+                }
+
+                item.Update.Add(nameof(Member.UpdateTime), DateTime.Now.Tostr());
+                item.Update.Add(nameof(Member.UpdateUserId),1);
+                item.Update.Add(nameof(Member.UpdateUserName), "会员修改昵称");
+                var res = BlogHelper.UpdateByWhere_Member(item.Update, new Dictionary<string, object>() {
+                    {nameof(Member.IsDeleted),0 },
+                    { nameof(Member.UserAccount),item.Num}
+                }, new OpertionUser());
+
+
+                return new JsonResponse { Code = res.IsSucceed ? 0 : 1, Msg = res.Message };
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "MemberController/UpdateMember");
                 return new JsonResponse { Code = 1, Msg = "程序好像开小差了" + ex };
             }
         }

@@ -7,8 +7,34 @@ using System.Threading.Tasks;
 
 namespace Blog.Com.Helpers
 {
+    /// <summary>
+    /// 拓展辅助类  写的有点乱
+    /// </summary>
     public static class JsonHelper
     {
+        /// <summary>
+        /// 时间转为 yyyy-MM-dd hh:mm:ss格式
+        /// </summary>
+        /// <param name="time">The time.</param>
+        /// <returns></returns>
+        public static string Tostr(this DateTime time)
+        {
+            try
+            {
+                if (time == null)
+                {
+                    return "1990-01-01 08:00:00";
+                }
+                else
+                {
+                    return time.ToString("yyyy-MM-dd hh:mm:ss");
+                }
+            }
+            catch
+            {
+                return "1990-01-01 08:00:00";
+            }
+        }
         public static List<T> DeserialObjectToList<T>(this object data)
         {
             try

@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web;
+using System.Web.Caching;
 using System.Web.Http;
 
 namespace CJJ.Blog.Apiv2.Controllers
@@ -36,7 +37,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                     return new JsonResponse { Code = 1, Msg = "参数不完整" };
                 }
 
-                var code = CacheHelper.GetCacheItem(model.CodeKey)?.ToString();
+                var code = CacheHelper.GetCacheItemAndDel(model.CodeKey)?.ToString();
                 if (string.IsNullOrEmpty(code) || code != model.Code)
                 {
                     return new JsonResponse { Code = 1, Msg = "验证码错误" };
@@ -81,7 +82,7 @@ namespace CJJ.Blog.Apiv2.Controllers
             {
                 code = vCode.CreateValidateCode();
             }
-            CacheHelper.AddCacheItem(authCodeKey, code);
+            CacheHelper.AddCacheItem(authCodeKey, code,DateTime.Now.AddMinutes(15),Cache.NoSlidingExpiration,CacheItemPriority.High);
             byte[] bytes = vCode.CreateValidateGraphic(code);
             var resp = new HttpResponseMessage(HttpStatusCode.OK)
             {
