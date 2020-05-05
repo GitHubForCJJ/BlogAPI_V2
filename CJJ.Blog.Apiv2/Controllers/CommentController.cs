@@ -11,6 +11,11 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Web.Http;
 using FastDev.Common.Code;
+using System.Threading.Tasks;
+using CJJ.Blog.Service.Models.Data;
+using Blog.Com.Helpers;
+using System.Web.Caching;
+using CJJ.Blog.Service.Model.View;
 
 namespace CJJ.Blog.Apiv2.Controllers
 {
@@ -88,7 +93,32 @@ namespace CJJ.Blog.Apiv2.Controllers
                     comment.Add(nameof(Comment.Commentid), sessionid);
                 }
                 var dic = UtilConst.AddBaseInfo<Comment>(comment, model.Token, true, ref opt);
-                var res = BlogHelper.Add_Comment(dic, opt);
+                Result res = BlogHelper.Add_Comment(dic, opt);
+
+                #region 处理list、item缓存问题
+
+                Task.Run(() =>
+                {
+                    if (res.IsSucceed && model.ToMemberid.Toint()==0)
+                    {
+                        List<Bloginfo> bloglist = CacheHelper.GetCacheItem(ConfigUtil.BlogListCacheKey)?.ToString()?.DeserialObjectToList<Bloginfo>();
+                        Bloginfo info = bloglist.FirstOrDefault(x => x.BlogNum == model.BlogNum);
+                        if (bloglist != null && bloglist.Count > 0 && info != null && info.KID > 0)
+                        {
+                            bloglist.FirstOrDefault(x => x.BlogNum == model.BlogNum).Comments += 1;
+                            CacheHelper.AddCacheItem(ConfigUtil.BlogListCacheKey, bloglist.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
+                        }
+                        var blogview=CacheHelper.GetCacheItem($"{ConfigUtil.BlogItemCacheKeyPrefix}{model.BlogNum}")?.DeserialObject<BloginfoView>();
+                        if (blogview != null && blogview.KID > 0)
+                        {
+                            blogview.Comments += 1;
+                            CacheHelper.AddCacheItem($"{ConfigUtil.BlogItemCacheKeyPrefix}{model.BlogNum}", blogview.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
+                        }
+
+                    }
+                });
+
+                #endregion
 
                 return new JsonResponse() { Code = res.IsSucceed ? 0 : 1, Data = sessionid };
             }

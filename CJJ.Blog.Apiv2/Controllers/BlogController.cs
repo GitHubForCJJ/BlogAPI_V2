@@ -45,8 +45,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     dicwhere.Add(nameof(Bloginfo.Type), model.KID);
                 }
-                string key = ConfigUtil.BlogListCacheKey;
-                List<Bloginfo> alllist = HttpRuntime.Cache.Get(key)?.DeserialObjectToList<Bloginfo>();
+                 string key = ConfigUtil.BlogListCacheKey;
+                List<Bloginfo> alllist = CacheHelper.GetCacheItem(key)?.DeserialObjectToList<Bloginfo>();
                 int cut = 0;
                 if (alllist == null || alllist.Count == 0)
                 {
@@ -67,12 +67,15 @@ namespace CJJ.Blog.Apiv2.Controllers
                 List<Bloginfo> retlist = null;
                 if (model.KID > 0)
                 {
-                    retlist = alllist.Where(x => x.Type == model.KID)?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
+                    retlist = alllist.Where(x => x.Type == model.KID)?.ToList();
                 }
                 else
                 {
-                    retlist = alllist?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
+                    retlist = alllist;
                 }
+                cut = retlist.Count;
+                retlist =retlist?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
+          
 
                 #region 统计访问地址信息
                 Task.Run(() =>
@@ -116,8 +119,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     return new JsonResponse { Code = 1, Msg = "参数不合法" };
                 }
-                string key = $"{CJJ.Blog.Apiv2.Models.ConfigUtil.BlogListCacheKeyPrefix}{model.Num}";
-                BloginfoView bloginfoView = HttpRuntime.Cache.Get(key)?.ToString()?.DeserialObject<BloginfoView>();
+                string key = $"{CJJ.Blog.Apiv2.Models.ConfigUtil.BlogItemCacheKeyPrefix}{model.Num}";
+                BloginfoView bloginfoView = CacheHelper.GetCacheItem(key)?.ToString()?.DeserialObject<BloginfoView>();
                 if (bloginfoView == null)
                 {
                     bloginfoView = BlogHelper.GetModelByNum(model.Num);
@@ -128,15 +131,17 @@ namespace CJJ.Blog.Apiv2.Controllers
                 #region 处理list 和 item 缓存
                 Task.Run(() =>
                 {
-                    CacheHelper.DelCacheItem(key);
+                    //CacheHelper.DelCacheItem(key);
                     CacheHelper.AddCacheItem(key, bloginfoView.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                     string alllistkey = ConfigUtil.BlogListCacheKey;
-                    string allinfo = HttpRuntime.Cache.Get(alllistkey)?.ToString();
+                    string allinfo = CacheHelper.GetCacheItem(alllistkey)?.ToString();
                     List<Bloginfo> cachelist = allinfo?.DeserialObjectToList<Bloginfo>();
-                    if (cachelist != null && cachelist.Count > 0)
+                    Bloginfo info = cachelist.FirstOrDefault(x => x.BlogNum == model.Num);
+
+                    if (cachelist != null && cachelist.Count > 0&& info!=null &&info.KID>0)
                     {
                         cachelist.FirstOrDefault(x => x.BlogNum == model.Num).Views += 1;
-                        CacheHelper.DelCacheItem(alllistkey);
+                        //CacheHelper.DelCacheItem(alllistkey);
                         CacheHelper.AddCacheItem(alllistkey, cachelist.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                     }
 
@@ -237,11 +242,11 @@ namespace CJJ.Blog.Apiv2.Controllers
                     {nameof(Category.States),0 }
                 };
                 string key = ConfigUtil.BlogTypeListCacheKey;
-                List<Category> retlist = HttpRuntime.Cache.Get(key)?.DeserialObjectToList<Category>();
+                List<Category> retlist = CacheHelper.GetCacheItem(key)?.DeserialObjectToList<Category>();
                 if (retlist == null || retlist.Count == 0)
                 {
                     retlist = BlogHelper.GetList_Category(dic);
-                    HttpRuntime.Cache.Insert(key, retlist.SerializObject(), null, DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+                    CacheHelper.AddCacheItem(key, retlist.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                 }
 
                 retlist = retlist?.OrderByDescending(x => x.CreateTime)?.OrderByDescending(x => x.Sort)?.ToList();
@@ -311,17 +316,17 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     if (res.IsSucceed)
                     {
-                        string key = $"{CJJ.Blog.Apiv2.Models.ConfigUtil.BlogListCacheKeyPrefix}{item.BlogNum}";
+                        string key = $"{CJJ.Blog.Apiv2.Models.ConfigUtil.BlogItemCacheKeyPrefix}{item.BlogNum}";
                         BloginfoView bloginfoView = CacheHelper.GetCacheItem(key)?.ToString()?.DeserialObject<BloginfoView>();
                         bloginfoView.Start += isadd ? 1 : -1;
                         CacheHelper.AddCacheItem(key, bloginfoView.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                         string alllistkey = ConfigUtil.BlogListCacheKey;
-                        string allinfo = HttpRuntime.Cache.Get(alllistkey)?.ToString();
+                        string allinfo =CacheHelper.GetCacheItem(alllistkey)?.ToString();
                         List<Bloginfo> cachelist = allinfo?.DeserialObjectToList<Bloginfo>();
-                        if (cachelist != null && cachelist.Count > 0)
+                        Bloginfo info = cachelist.FirstOrDefault(x => x.BlogNum == item.BlogNum);
+                        if (cachelist != null && cachelist.Count > 0 && info!=null && info.KID>0)
                         {
                             cachelist.FirstOrDefault(x => x.BlogNum == item.BlogNum).Start += isadd ? 1 : -1;
-                            CacheHelper.DelCacheItem(alllistkey);
                             CacheHelper.AddCacheItem(alllistkey, cachelist.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                         }
                     }

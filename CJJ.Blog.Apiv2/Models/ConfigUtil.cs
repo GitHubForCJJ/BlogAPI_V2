@@ -33,6 +33,18 @@ namespace CJJ.Blog.Apiv2.Models
         /// <summary>
         /// 单个 前缀部分
         /// </summary>
-        public static string BlogListCacheKeyPrefix = "BlogListCacheKeyPrefix";
+        public static string BlogItemCacheKeyPrefix = "BlogItemCacheKeyPrefix";
+        /// <summary>
+        /// QiNiuAccessKey
+        /// </summary>
+        public static string QiNiuAccessKey= ConfigHelper.GetConfigToString("QiNiuAccessKey");
+        /// <summary>
+        /// QiNiuAccessKey
+        /// </summary>
+        public static string QiNiuSecretKey = ConfigHelper.GetConfigToString("QiNiuSecretKey");
+        /// <summary>
+        /// 上传目标空间
+        /// </summary>
+        public static string QiNiuBucket = ConfigHelper.GetConfigToString("QiNiuBucket");
     }
 }

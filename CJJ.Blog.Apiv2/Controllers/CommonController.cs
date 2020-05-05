@@ -1,5 +1,8 @@
 ﻿using Blog.Com.Helpers;
 using CJJ.Blog.Apiv2.Models;
+using FastDev.Log;
+using Qiniu.Storage;
+using Qiniu.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +45,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 code = vCode.CreateValidateCode();
             }
 
-            HttpRuntime.Cache.Insert($"Blogimgcode_{authcodekey}", code, null, DateTime.Now.AddMinutes(15), Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+            CacheHelper.AddCacheItem($"Blogimgcode_{authcodekey}", code, DateTime.Now.AddMinutes(15), Cache.NoSlidingExpiration, CacheItemPriority.High);
 
             byte[] bytes = vCode.CreateValidateGraphic(code);
             var resp = new HttpResponseMessage(HttpStatusCode.OK)
@@ -51,6 +54,40 @@ namespace CJJ.Blog.Apiv2.Controllers
             };
             resp.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpg");
             return resp;
+        }
+        #endregion
+
+        #region 七牛
+        /// <summary>
+        /// 获取七牛上传鉴权ToKen
+        /// </summary>
+        /// <returns>FastDev.Http.JsonResponse.</returns>
+        [HttpPost]
+        public JsonResponse GetQiNiuUploadToken()
+        {
+            try
+            {
+                string qiniutoken = "QiNiuUploadToken";
+                string token = CacheHelper.GetCacheItem(qiniutoken)?.ToString();
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    Mac mac = new Mac(ConfigUtil.QiNiuAccessKey, ConfigUtil.QiNiuSecretKey);
+                    PutPolicy putPolicy = new PutPolicy();
+                    // 设置要上传的目标空间
+                    putPolicy.Scope = ConfigUtil.QiNiuBucket;
+                    // 上传策略的过期时间(单位:秒)
+                    putPolicy.SetExpires(2 * 60 * 60);
+                    // 生成上传token
+                    token = Auth.CreateUploadToken(mac, putPolicy.ToJsonString());
+                    CacheHelper.AddCacheItem(qiniutoken, token, DateTime.Now.AddSeconds(2 * 60 * 50), Cache.NoSlidingExpiration, CacheItemPriority.High);
+                }
+                return new JsonResponse() { Code = 0, Msg = $"请求成功", Data = token };
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog(ex, "/Comm/GetQiNiuUploadToken");
+                return new JsonResponse() { Code = 1, Msg = $"请求失败：{ex.Message}" };
+            }
         }
         #endregion
     }

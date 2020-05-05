@@ -42,7 +42,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                 var qrcode = item.Update["Qrcode"].ToString();
 
 
-                string qr = HttpRuntime.Cache.Get($"Blogimgcode_{qrkey}")?.ToString() ?? "";
+                string qr = CacheHelper.GetCacheItem($"Blogimgcode_{qrkey}")?.ToString() ?? "";
                 if (qr != qrcode)
                 {
                     return new JsonResponse { Code = 1, Msg = "验证码错误" };

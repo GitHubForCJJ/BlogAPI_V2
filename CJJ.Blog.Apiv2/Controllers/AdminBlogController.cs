@@ -129,8 +129,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                 }
                 Task.Run(() =>
                 {
-                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
-                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                    CacheHelper.DelCacheItem(ConfigUtil.BlogListCacheKey);
+                    CacheHelper.DelCacheItem($"{ConfigUtil.BlogItemCacheKeyPrefix}{up.Num}");
                 });
                 return FastResponse("", model.Token, 0, 0, "添加成功");
             }
@@ -179,8 +179,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                 }
                 Task.Run(() =>
                 {
-                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
-                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                    CacheHelper.DelCacheItem(ConfigUtil.BlogListCacheKey);
+                    CacheHelper.DelCacheItem($"{ConfigUtil.BlogItemCacheKeyPrefix}{up.Num}");
                 });
                 return FastResponse("", model.Token, 0, 0, "编辑成功");
             }
@@ -217,8 +217,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                 var res1 = BlogHelper.UpdateByWhere_Bloginfo(infodic, dicwhere, opt);
                 Task.Run(() =>
                 {
-                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
-                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                    CacheHelper.DelCacheItem(ConfigUtil.BlogListCacheKey);
+                    CacheHelper.DelCacheItem($"{ConfigUtil.BlogItemCacheKeyPrefix}{up.Num}");
                 });
                 return FastResponse(res1, model.Token, 0, 0, res1.Message);
             }
@@ -259,8 +259,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                 var res1 = BlogHelper.UpdateByWhere_Bloginfo(infodic, dicwhere, opt);
                 Task.Run(() =>
                 {
-                    HttpRuntime.Cache.Remove(ConfigUtil.BlogListCacheKey);
-                    HttpRuntime.Cache.Remove($"{ConfigUtil.BlogListCacheKeyPrefix}{up.Num}");
+                    CacheHelper.DelCacheItem(ConfigUtil.BlogListCacheKey);
+                    CacheHelper.DelCacheItem($"{ConfigUtil.BlogItemCacheKeyPrefix}{up.Num}");
                 });
                 return FastResponse(res1, model.Token, 0, 0, res1.Message);
             }
