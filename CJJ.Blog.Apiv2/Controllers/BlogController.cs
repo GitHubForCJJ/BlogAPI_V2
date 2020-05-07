@@ -370,7 +370,7 @@ namespace CJJ.Blog.Apiv2.Controllers
             }
             catch (Exception)
             {
-                return "0.0.0.0";
+                return "0.0.0.1";
             }
         }
         /// <summary>

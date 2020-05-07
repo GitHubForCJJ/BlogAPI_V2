@@ -16,7 +16,10 @@ namespace CJJ.Blog.Apiv2.Models
         /// </summary>
         public static string Version = UtilConst.Version;
 
-       
+        /// <summary>
+        /// 单例
+        /// </summary>
+        public static object lockobj = new object();
 
         /// <summary>
         /// 添加缓存  如果key存在会覆盖之前的值
@@ -30,7 +33,11 @@ namespace CJJ.Blog.Apiv2.Models
         {
             var cachekey = $"{Version}_{key}";
             //HttpContext.Current.Cache.Insert(cachekey, code, null, DateTime.Now.AddDays(1), System.Web.Caching.Cache.NoSlidingExpiration);
-            HttpRuntime.Cache.Insert(cachekey, code, null, dateTime, timeSpan, cacheItemPriority, null);
+            lock (lockobj)
+            {
+                HttpRuntime.Cache.Insert(cachekey, code, null, dateTime, timeSpan, cacheItemPriority, null);
+            }
+
         }
         /// <summary>
         /// 获取缓存并删除

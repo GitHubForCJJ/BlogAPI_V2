@@ -138,6 +138,10 @@
     <Compile Include="App_Filters\WithOutPermisstionFilter.cs" />
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\AccessController.cs" />
+    <Compile Include="Controllers\AdminCommentController.cs" />
+    <Compile Include="Controllers\AdminRoleController.cs" />
+    <Compile Include="Controllers\ArtiseController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\AdminBlogController.cs" />
     <Compile Include="Controllers\BlogController.cs" />

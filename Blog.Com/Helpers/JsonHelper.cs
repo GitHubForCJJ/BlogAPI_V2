@@ -59,6 +59,17 @@ namespace Blog.Com.Helpers
                 return default(T);
             }
         }
+        public static T DeserialObject<T>(this string data)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(data);
+            }
+            catch (Exception e)
+            {
+                return default(T);
+            }
+        }
         public static string SerializObject(this object data)
         {
             try
@@ -82,5 +93,6 @@ namespace Blog.Com.Helpers
                 return null;
             }
         }
+
     }
 }
