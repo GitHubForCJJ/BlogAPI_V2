@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FastDev.Log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -11,10 +12,6 @@ namespace CJJ.Blog.Apiv2.Models
     /// </summary>
     public static class CacheHelper
     {
-        /// <summary>
-        /// The version
-        /// </summary>
-        public static string Version = UtilConst.Version;
 
         /// <summary>
         /// 单例
@@ -29,14 +26,22 @@ namespace CJJ.Blog.Apiv2.Models
         /// <param name="dateTime">绝对时间</param>
         /// <param name="timeSpan">滑动时间 Cache.NoSlidingExpiration</param>
         /// <param name="cacheItemPriority">策略 CacheItemPriority.High</param>
-        public static void AddCacheItem(string key, string code,DateTime dateTime,TimeSpan timeSpan, CacheItemPriority cacheItemPriority)
+        public static void AddCacheItem(string key, string code, DateTime dateTime, TimeSpan timeSpan, CacheItemPriority cacheItemPriority)
         {
-            var cachekey = $"{Version}_{key}";
-            //HttpContext.Current.Cache.Insert(cachekey, code, null, DateTime.Now.AddDays(1), System.Web.Caching.Cache.NoSlidingExpiration);
-            lock (lockobj)
+            try
             {
-                HttpRuntime.Cache.Insert(cachekey, code, null, dateTime, timeSpan, cacheItemPriority, null);
+                var cachekey = $"{UtilConst.Version}_{key}";
+                //HttpContext.Current.Cache.Insert(cachekey, code, null, DateTime.Now.AddDays(1), System.Web.Caching.Cache.NoSlidingExpiration);
+                lock (lockobj)
+                {
+                    HttpRuntime.Cache.Insert(cachekey, code, null, dateTime, timeSpan, cacheItemPriority, null);
+                }
             }
+            catch(Exception ex)
+            {
+                LogHelper.WriteLog(ex, "CacheHelper/AddCacheItem");
+            }
+
 
         }
         /// <summary>
@@ -46,7 +51,7 @@ namespace CJJ.Blog.Apiv2.Models
         /// <returns></returns>
         public static object GetCacheItemAndDel(string key)
         {
-            var cachekey = $"{Version}_{key}";
+            var cachekey = $"{UtilConst.Version}_{key}";
             try
             {
                 var cache = HttpRuntime.Cache.Get(cachekey);
@@ -55,6 +60,7 @@ namespace CJJ.Blog.Apiv2.Models
             }
             catch (Exception ex)
             {
+                LogHelper.WriteLog(ex, "CacheHelper/GetCacheItemAndDel");
                 return null;
             }
         }
@@ -65,11 +71,16 @@ namespace CJJ.Blog.Apiv2.Models
         /// <returns></returns>
         public static object GetCacheItem(string key)
         {
-            var cachekey = $"{Version}_{key}";
+            var cachekey = $"{UtilConst.Version}_{key}";
             try
             {
                 var cache = HttpRuntime.Cache.Get(cachekey);
-                return cache;
+                if(cache!=null || !string.IsNullOrEmpty(cache?.ToString()))
+                {
+                    return cache;
+                }
+                return string.Empty;
+             
             }
             catch
             {
@@ -81,17 +92,19 @@ namespace CJJ.Blog.Apiv2.Models
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns></returns>
-        public static object DelCacheItem(string key)
+        public static void DelCacheItem(string key)
         {
-            var cachekey = $"{Version}_{key}";
+            var cachekey = $"{UtilConst.Version}_{key}";
             try
             {
-                var cache = HttpRuntime.Cache.Remove(cachekey);
-                return cache;
+                lock (lockobj)
+                {
+                    var cache = HttpRuntime.Cache.Remove(cachekey);
+                }
             }
-            catch 
+            catch(Exception ex)
             {
-                return null;
+                LogHelper.WriteLog(ex, "CacheHelper/DelCacheItem");
             }
         }
     }
