@@ -33,7 +33,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse GetListBlog([FromBody]BaseViewModel model)
+        public JsonResponse GetListBlog([FromBody] BaseViewModel model)
         {
             try
             {
@@ -45,8 +45,13 @@ namespace CJJ.Blog.Apiv2.Controllers
                 {
                     dicwhere.Add(nameof(Bloginfo.Type), model.KID);
                 }
-                 string key = ConfigUtil.BlogListCacheKey;
-                List<Bloginfo> alllist = CacheHelper.GetCacheItem(key)?.DeserialObjectToList<Bloginfo>();
+                string key = ConfigUtil.BlogListCacheKey;
+                var cacheobj = CacheHelper.GetCacheItem(key)?.ToString() ?? "";
+                List<Bloginfo> alllist = new List<Bloginfo>();
+                if (!string.IsNullOrEmpty(cacheobj))
+                {
+                    alllist = CacheHelper.GetCacheItem(key)?.DeserialObjectToList<Bloginfo>();
+                }
                 int cut = 0;
                 if (alllist == null || alllist.Count == 0)
                 {
@@ -74,8 +79,8 @@ namespace CJJ.Blog.Apiv2.Controllers
                     retlist = alllist;
                 }
                 cut = retlist.Count;
-                retlist =retlist?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
-          
+                retlist = retlist?.Skip((model.Page - 1) * model.Limit).Take(model.Limit).ToList();
+
 
                 #region 统计访问地址信息
                 Task.Run(() =>
@@ -111,7 +116,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse GetItemBlog([FromBody]BaseViewModel model)
+        public JsonResponse GetItemBlog([FromBody] BaseViewModel model)
         {
             try
             {
@@ -138,7 +143,7 @@ namespace CJJ.Blog.Apiv2.Controllers
                     List<Bloginfo> cachelist = allinfo?.DeserialObjectToList<Bloginfo>();
                     Bloginfo info = cachelist.FirstOrDefault(x => x.BlogNum == model.Num);
 
-                    if (cachelist != null && cachelist.Count > 0&& info!=null &&info.KID>0)
+                    if (cachelist != null && cachelist.Count > 0 && info != null && info.KID > 0)
                     {
                         cachelist.FirstOrDefault(x => x.BlogNum == model.Num).Views += 1;
                         //CacheHelper.DelCacheItem(alllistkey);
@@ -161,11 +166,9 @@ namespace CJJ.Blog.Apiv2.Controllers
                         {nameof(Bloginfo.IsDeleted),0 }
                     };
                         var bloginfomodel = BlogHelper.GetModelByWhere_Bloginfo(dic);
-                        var updic = new Dictionary<string, object>()
-                    {
-                        {nameof(Bloginfo.Views),bloginfomodel.Views+1 },
-                    };
-                        BlogHelper.UpdateByWhere_Bloginfo(updic, dic, new Service.Models.View.OpertionUser());
+
+                        BlogHelper.UpdateNums_Bloginfo(nameof(Bloginfo.Views), 1, dic,
+                            new Service.Models.View.OpertionUser());
 
                         var adddic = new Dictionary<string, object>()
                     {
@@ -202,7 +205,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="model">{"blogNum":"ajksdj","BlogType":1}</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse GetPrenextBlog([FromBody]PrenextModel model)
+        public JsonResponse GetPrenextBlog([FromBody] PrenextModel model)
         {
             try
             {
@@ -232,7 +235,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="model">{}</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse GetListBlogTypes([FromBody]PrenextModel model)
+        public JsonResponse GetListBlogTypes([FromBody] PrenextModel model)
         {
             try
             {
@@ -242,7 +245,12 @@ namespace CJJ.Blog.Apiv2.Controllers
                     {nameof(Category.States),0 }
                 };
                 string key = ConfigUtil.BlogTypeListCacheKey;
-                List<Category> retlist = CacheHelper.GetCacheItem(key)?.DeserialObjectToList<Category>();
+                List<Category> retlist = new List<Category>();
+                var cacheobj = CacheHelper.GetCacheItem(key)?.ToString() ?? "";
+                if (!string.IsNullOrEmpty(cacheobj))
+                {
+                    retlist = CacheHelper.GetCacheItem(key)?.DeserialObjectToList<Category>();
+                }
                 if (retlist == null || retlist.Count == 0)
                 {
                     retlist = BlogHelper.GetList_Category(dic);
@@ -265,7 +273,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="model">{}</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse AddPraise([FromBody]JsonRequest model)
+        public JsonResponse AddPraise([FromBody] JsonRequest model)
         {
             var res = new Result { IsSucceed = false };
             try
@@ -321,10 +329,10 @@ namespace CJJ.Blog.Apiv2.Controllers
                         bloginfoView.Start += isadd ? 1 : -1;
                         CacheHelper.AddCacheItem(key, bloginfoView.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
                         string alllistkey = ConfigUtil.BlogListCacheKey;
-                        string allinfo =CacheHelper.GetCacheItem(alllistkey)?.ToString();
+                        string allinfo = CacheHelper.GetCacheItem(alllistkey)?.ToString();
                         List<Bloginfo> cachelist = allinfo?.DeserialObjectToList<Bloginfo>();
                         Bloginfo info = cachelist.FirstOrDefault(x => x.BlogNum == item.BlogNum);
-                        if (cachelist != null && cachelist.Count > 0 && info!=null && info.KID>0)
+                        if (cachelist != null && cachelist.Count > 0 && info != null && info.KID > 0)
                         {
                             cachelist.FirstOrDefault(x => x.BlogNum == item.BlogNum).Start += isadd ? 1 : -1;
                             CacheHelper.AddCacheItem(alllistkey, cachelist.SerializObject(), DateTime.Now.AddDays(2), Cache.NoSlidingExpiration, CacheItemPriority.High);
@@ -379,7 +387,7 @@ namespace CJJ.Blog.Apiv2.Controllers
         /// <param name="model">{"where":{"BlogNum":""}}</param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResponse IsOrNotPraise([FromBody]JsonRequest model)
+        public JsonResponse IsOrNotPraise([FromBody] JsonRequest model)
         {
             try
             {
@@ -398,7 +406,7 @@ namespace CJJ.Blog.Apiv2.Controllers
 
                 var ret = BlogHelper.GetModelByWhere_ArticlePraise(item.Where);
 
-                return new JsonResponse { Code = 0, Data = new{ ArticlePraise= ret?.KID > 0 ,Count=count} };
+                return new JsonResponse { Code = 0, Data = new { ArticlePraise = ret?.KID > 0, Count = count } };
             }
             catch (Exception ex)
             {

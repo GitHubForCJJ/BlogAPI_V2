@@ -37,7 +37,7 @@ namespace CJJ.Blog.Apiv2.Models
                     HttpRuntime.Cache.Insert(cachekey, code, null, dateTime, timeSpan, cacheItemPriority, null);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LogHelper.WriteLog(ex, "CacheHelper/AddCacheItem");
             }
@@ -75,15 +75,16 @@ namespace CJJ.Blog.Apiv2.Models
             try
             {
                 var cache = HttpRuntime.Cache.Get(cachekey);
-                if(cache!=null || !string.IsNullOrEmpty(cache?.ToString()))
+                if (cache != null || !string.IsNullOrEmpty(cache?.ToString()))
                 {
                     return cache;
                 }
                 return string.Empty;
-             
+
             }
-            catch
+            catch (Exception e)
             {
+                LogHelper.WriteLog(e, "cachehelper/GetCacheItem" + cachekey);
                 return null;
             }
         }
@@ -102,7 +103,7 @@ namespace CJJ.Blog.Apiv2.Models
                     var cache = HttpRuntime.Cache.Remove(cachekey);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LogHelper.WriteLog(ex, "CacheHelper/DelCacheItem");
             }
